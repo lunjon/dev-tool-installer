@@ -1,8 +1,5 @@
-# Dev Tools Installer
-`dti` is a command-line app that installs editor/code tools, such as:
-- LSP servers
-- Linters
-- Formatters
+# Dev Tool Installer
+`dti` is a command-line app that installs editor/code tools, such as language servers, linters and formatters.
 
 All packages are installed in your home directory at `~/.devtoolinstaller/`, no need to clutter the system.
 
