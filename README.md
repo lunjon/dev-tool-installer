@@ -48,10 +48,12 @@ ensure-installed = [
 ]
 ```
 
+### Root
+You can specify the root directory for `dti` using the `DTI_ROOT` environment variable.
+
+If this isn't specified it defaults to `~/.devtoolinstaller`.
+
 ## Todo
-- Add support for configuring root, i.e. location on file system where everything is installed
-  - Environment variable: `DTI_ROOT`
-  - Configuration: `root = "string"`
 - Additional configuration for packages in configuration:
   - Lock version: set a fix version for a package
 - Add support for other platforms

@@ -2,6 +2,7 @@ use clap::Parser;
 use crossterm::style::Stylize;
 use devtoolinstaller::cli::Cli;
 use devtoolinstaller::handler::Handler;
+use std::path::PathBuf;
 
 fn main() {
     let basedirs = match directories::BaseDirs::new() {
@@ -12,7 +13,10 @@ fn main() {
         }
     };
 
-    let dir = basedirs.home_dir().join(".devtoolinstaller");
+    let dir = match std::env::var("DTI_ROOT") {
+        Ok(dir) => PathBuf::from(&dir),
+        Err(_) => basedirs.home_dir().join(".devtoolinstaller"),
+    };
 
     let handler = Handler::new(dir);
     let cli = Cli::parse();
