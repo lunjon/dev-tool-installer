@@ -1,12 +1,9 @@
-use std::{
-    ffi::OsStr,
-    fs,
-    os::unix::fs::symlink,
-    process::{self, Stdio},
-};
-
 use super::{Dirs, Installer, PkgInfo, Release};
+use crate::util::symlink;
 use anyhow::Result;
+use std::ffi::OsStr;
+use std::fs;
+use std::process::{self, Stdio};
 
 pub struct PIP {
     dependencies: Vec<String>,
@@ -51,7 +48,7 @@ impl Installer for PIP {
         // Create symbolic link
         let link = dirs.bin_dir.join(&info.bin_name);
         let original = venv_dir.join("bin").join(&info.bin_name);
-        symlink(original, link)?;
+        symlink(&original, &link)?;
 
         Ok(())
     }

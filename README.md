@@ -56,7 +56,4 @@ If this isn't specified it defaults to `~/.devtoolinstaller`.
 ## Todo
 - Additional configuration for packages in configuration:
   - Lock version: set a fix version for a package
-- Add support for other platforms
-  - It currently only support linux binaries in e.g. assets
-  - https://doc.rust-lang.org/reference/conditional-compilation.html
 - Support packages that do not have releases (e.g. bash-language-server)

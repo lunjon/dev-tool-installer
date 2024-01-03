@@ -33,8 +33,6 @@ struct Pkg {
 
 #[derive(Deserialize)]
 struct AssetPkgInfo {
-    #[serde(rename = "assetRegex")]
-    asset_regex: String,
     bin: Option<String>,
 }
 

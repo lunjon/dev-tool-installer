@@ -2,7 +2,6 @@ use anyhow::{bail, Result};
 use serde::de::DeserializeOwned;
 use std::ffi::OsStr;
 use std::io::{LineWriter, Read, Write};
-use std::os::unix::fs::symlink;
 use std::os::unix::prelude::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
@@ -104,8 +103,15 @@ pub fn create_script(path: &Path, lines: Vec<String>, opt: &ScriptOptions) -> Re
     Ok(())
 }
 
-pub fn link(original: &Path, link: &Path) -> Result<()> {
-    symlink(original, link)?;
+#[cfg(unix)]
+pub fn symlink(original: &Path, link: &Path) -> Result<()> {
+    std::os::unix::fs::symlink(original, link)?;
+    Ok(())
+}
+
+#[cfg(windows)]
+pub fn symlink(original: &Path, link: &Path) -> Result<()> {
+    std::os::windows::fs::symlink_file(original, link)?;
     Ok(())
 }
 

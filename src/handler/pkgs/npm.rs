@@ -1,12 +1,9 @@
-use std::fs;
-
 use super::{gh_client, JsonPackage, Pkg};
-use crate::{
-    config::Config,
-    pkg::{CallbackOperation, Dirs, Package, PkgInfo, NPM},
-    pkg_args, util,
-};
+use crate::config::Config;
+use crate::pkg::{CallbackOperation, Dirs, Package, PkgInfo, NPM};
+use crate::{pkg_args, util};
 use anyhow::Result;
+use std::fs;
 
 pub fn build(cfg: &Config, pkg: &JsonPackage) -> Result<Package> {
     let pkginfo: Pkg = serde_json::from_value(pkg.pkg.clone())?;
@@ -52,7 +49,7 @@ fn vscode_langservers_extracted_callback(
             for bin_name in bins {
                 let pkg_bin = dirs.pkg_dir.join(&info.name).join("bin").join(bin_name);
                 let bin = dirs.bin_dir.join(bin_name);
-                util::link(&pkg_bin, &bin)?;
+                util::symlink(&pkg_bin, &bin)?;
             }
         }
         CallbackOperation::Uninstall => {

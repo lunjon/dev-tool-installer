@@ -99,54 +99,35 @@
       "kind": "ls",
       "installer": "release-asset",
       "repo": "https://github.com/elixir-lsp/elixir-ls",
-      "pkg": {
-        "assetRegex": "^elixir-ls-v.*\\.zip$"
-      }
+      "pkg": {}
     },
     {
       "name": "rust-analyzer",
       "kind": "ls",
       "installer": "release-asset",
       "repo": "https://github.com/rust-lang/rust-analyzer",
-      "pkg": {
-        "assetRegex": "rust-analyzer-x86_64-unknown-linux-gnu.gz"
-      }
+      "pkg": {}
     },
     {
       "name": "clojure-lsp",
       "kind": "ls",
       "installer": "release-asset",
       "repo": "https://github.com/clojure-lsp/clojure-lsp",
-      "pkg": {
-        "assetRegex": "^clojure-lsp-native-linux-amd64.zip$"
-      }
+      "pkg": {}
     },
     {
       "name": "ltex-ls",
       "kind": "ls",
       "installer": "release-asset",
       "repo": "https://github.com/valentjn/ltex-ls",
-      "pkg": {
-        "assetRegex": "^ltex-ls-.+-linux-x64.tar.gz$"
-      }
-    },
-    {
-      "name": "omnisharp",
-      "kind": "ls",
-      "installer": "release-asset",
-      "repo": "https://github.com/OmniSharp/omnisharp-roslyn",
-      "pkg": {
-        "assetRegex": "^omnisharp-linux-x64-net6.0.tar.gz$"
-      }
+      "pkg": {}
     },
     {
       "name": "direnv",
       "kind": "tool",
       "installer": "release-asset",
       "repo": "https://github.com/direnv/direnv",
-      "pkg": {
-        "assetRegex": "^direnv.linux-amd64$"
-      }
+      "pkg": {}
     }
   ]
 }

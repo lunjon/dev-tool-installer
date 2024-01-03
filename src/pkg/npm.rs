@@ -1,7 +1,7 @@
 use super::{CallbackOperation, Dirs, Installer, PackageCallback, PkgInfo, Release};
-use crate::util::new_cmd;
+use crate::util::{new_cmd, symlink};
 use anyhow::Result;
-use std::{fs, os::unix::fs::symlink};
+use std::fs;
 
 pub struct NPM {
     dependencies: Vec<String>,
@@ -46,7 +46,7 @@ impl Installer for NPM {
             // Create symbolic link
             let link = dirs.bin_dir.join(&info.bin_name);
             let original = target_dir.join("bin").join(&info.bin_name);
-            symlink(original, link)?;
+            symlink(&original, &link)?;
         }
 
         self.callback.as_ref()(CallbackOperation::Install, info, dirs)?;
