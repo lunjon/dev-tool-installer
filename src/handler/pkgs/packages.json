@@ -1,0 +1,152 @@
+{
+  "packages": [
+    {
+      "name": "gopls",
+      "kind": "ls",
+      "installer": "go",
+      "repo": "https://github.com/golang/tools",
+      "pkg": {
+        "module": "golang.org/x/tools/gopls",
+        "deps": []
+      }
+    },
+    {
+      "name": "goimports",
+      "kind": "linter",
+      "installer": "go",
+      "repo": "https://github.com/golang/tools",
+      "pkg": {
+        "module": "golang.org/x/tools/cmd/goimports",
+        "deps": []
+      }
+    },
+    {
+      "name": "lazygit",
+      "kind": "tool",
+      "installer": "go",
+      "repo": "https://github.com/jesseduffield/lazygit",
+      "pkg": {
+        "module": "github.com/jesseduffield/lazygit",
+        "deps": []
+      }
+    },
+    {
+      "name": "actionlint",
+      "kind": "tool",
+      "installer": "go",
+      "repo": "https://github.com/rhysd/actionlint",
+      "pkg": {
+        "module": "github.com/rhysd/actionlint/cmd/actionlint",
+        "deps": []
+      }
+    },
+    {
+      "name": "pylsp",
+      "kind": "ls",
+      "installer": "pip",
+      "repo": "https://github.com/python-lsp/python-lsp-server",
+      "pkg": {
+        "module": "python-lsp-server",
+        "deps": [
+          "python-lsp-ruff"
+        ]
+      }
+    },
+    {
+      "name": "typescript-language-server",
+      "kind": "ls",
+      "installer": "npm",
+      "repo": "https://github.com/typescript-language-server/typescript-language-server",
+      "pkg": {
+        "module": "typescript-language-server",
+        "deps": [
+          "typescript"
+        ]
+      }
+    },
+    {
+      "name": "pyright",
+      "kind": "ls",
+      "installer": "npm",
+      "repo": "https://github.com/microsoft/pyright",
+      "pkg": {
+        "module": "pyright",
+        "deps": []
+      }
+    },
+    {
+      "name": "bash-language-server",
+      "kind": "ls",
+      "installer": "npm",
+      "repo": "https://github.com/bash-lsp/bash-language-server",
+      "pkg": {
+        "module": "bash-language-server",
+        "deps": []
+      }
+    },
+    {
+      "name": "vscode-langservers-extracted",
+      "kind": "ls",
+      "installer": "npm",
+      "repo": "https://github.com/hrsh7th/vscode-langservers-extracted",
+      "pkg": {
+        "module": "vscode-langservers-extracted",
+        "deps": []
+      }
+    },
+    {
+      "name": "elixir-ls",
+      "kind": "ls",
+      "installer": "release-asset",
+      "repo": "https://github.com/elixir-lsp/elixir-ls",
+      "pkg": {
+        "assetRegex": "^elixir-ls-v.*\\.zip$"
+      }
+    },
+    {
+      "name": "rust-analyzer",
+      "kind": "ls",
+      "installer": "release-asset",
+      "repo": "https://github.com/rust-lang/rust-analyzer",
+      "pkg": {
+        "assetRegex": "rust-analyzer-x86_64-unknown-linux-gnu.gz"
+      }
+    },
+    {
+      "name": "clojure-lsp",
+      "kind": "ls",
+      "installer": "release-asset",
+      "repo": "https://github.com/clojure-lsp/clojure-lsp",
+      "pkg": {
+        "assetRegex": "^clojure-lsp-native-linux-amd64.zip$"
+      }
+    },
+    {
+      "name": "ltex-ls",
+      "kind": "ls",
+      "installer": "release-asset",
+      "repo": "https://github.com/valentjn/ltex-ls",
+      "pkg": {
+        "assetRegex": "^ltex-ls-.+-linux-x64.tar.gz$"
+      }
+    },
+    {
+      "name": "omnisharp",
+      "kind": "ls",
+      "installer": "release-asset",
+      "repo": "https://github.com/OmniSharp/omnisharp-roslyn",
+      "pkg": {
+        "assetRegex": "^omnisharp-linux-x64-net6.0.tar.gz$"
+      }
+    },
+    {
+      "name": "direnv",
+      "kind": "tool",
+      "installer": "release-asset",
+      "repo": "https://github.com/direnv/direnv",
+      "pkg": {
+        "assetRegex": "^direnv.linux-amd64$"
+      }
+    }
+  ]
+}
