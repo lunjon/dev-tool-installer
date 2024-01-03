@@ -5,6 +5,26 @@ All packages are installed in your home directory at `~/.devtoolinstaller/`, no 
 
 The binaries are put into `~/.devtoolinstaller/bin/`, so make sure you add that too your `PATH` environment variable.
 
+## Usage
+The CLI can be explored by just running `dti`:
+```sh
+$ dti
+...
+```
+
+### Installing Packages
+The most import sub-command is probably `install`:
+```sh
+$ dti install <package>
+```
+
+You can list available packages with
+```sh
+$ dti list --all # or shorter: dti ls -a
+```
+
+`dti` will try to resolve the latest release (on GitHub) and install that version.
+
 ## Configuration
 An optional configuration file can be used to configure some stuff: `~/.devtoolinstaller/config.toml`.
 
@@ -18,8 +38,10 @@ The following block is an example of a configuration file.
 client-id = "string"
 client-secret = "string"
 
-# Optional.
+# Optional. Additional configuration for packages.
 [packages]
+# Ensure that this list of packages is installed.
+# These will be installed whenever running the `install` command.
 ensure-installed = [
   "gopls",
   "lazygit",

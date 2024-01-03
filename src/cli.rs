@@ -18,24 +18,14 @@ pub enum Command {
     #[command(visible_alias = "ls")]
     List(ListArgs),
     /// Install a package.
-    /// Packages from ensure-installed will also be installed.
     #[command(visible_alias = "i")]
-    Install {
-        name: Option<String>,
-        /// Use as version to install. Else try to resolve latest version.
-        version: Option<String>,
-    },
+    Install(InstallArgs),
     /// Uninstall a package.
     #[command(visible_alias = "remove", visible_alias = "rm")]
     Uninstall { name: String },
     /// Updates a package.
     #[command(visible_alias = "up")]
-    Update {
-        name: String,
-        /// Version to update, or downgrade, to.
-        /// Upgrades to latest by default.
-        version: Option<String>,
-    },
+    Update(UpdateArgs),
 }
 
 #[derive(Args)]
@@ -49,4 +39,28 @@ pub struct ListArgs {
     /// Lists all packages.
     #[arg(long, short)]
     pub all: bool,
+}
+
+#[derive(Args)]
+pub struct InstallArgs {
+    /// Name of the package to install or update.
+    /// See available packages with "list --all".
+    #[arg()]
+    pub name: Option<String>,
+    /// Install specified version.
+    /// Latest version is resolved by default.
+    #[arg(long, short)]
+    pub version: Option<String>,
+}
+
+#[derive(Args)]
+pub struct UpdateArgs {
+    /// Name of the package to update.
+    /// See installed packages with "check".
+    #[arg()]
+    pub name: String,
+    /// Install specified version.
+    /// Latest version is resolved by default.
+    #[arg(long, short)]
+    pub version: Option<String>,
 }

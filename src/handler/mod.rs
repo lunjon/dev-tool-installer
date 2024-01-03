@@ -52,9 +52,9 @@ impl Handler {
             Command::Info => self.handle_info(&cx)?,
             Command::Check(args) => self.handle_check(&cx, args)?,
             Command::List(args) => self.handle_list(&cx, args)?,
-            Command::Install { name, version } => self.handle_install(&mut cx, name, version)?,
+            Command::Install(args) => self.handle_install(&mut cx, args.name, args.version)?,
             Command::Uninstall { name } => self.handle_uninstall(&mut cx, name)?,
-            Command::Update { name, version } => self.handle_update(&mut cx, name, version)?,
+            Command::Update(args) => self.handle_update(&mut cx, args.name, args.version)?,
         };
 
         self.write_manifest(&cx.manifest)
