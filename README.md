@@ -5,6 +5,13 @@ All packages are installed in your home directory at `~/.devtoolinstaller/`, no 
 
 The binaries are put into `~/.devtoolinstaller/bin/`, so make sure you add that too your `PATH` environment variable.
 
+## Installation
+Using cargo from the [rust toolchain](https://rustup.rs/):
+
+```sh
+$ cargo install --locked --path .
+```
+
 ## Usage
 The CLI can be explored by just running `dti`:
 ```sh
