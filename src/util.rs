@@ -28,6 +28,14 @@ where
     Ok(t)
 }
 
+/// Ensures that a command, e.g. pip, is installed.
+pub fn require_command(cmd: &str) -> Result<()> {
+    match which::which(cmd) {
+        Ok(_) => Ok(()),
+        Err(_) => bail!("missing required command: {}", cmd),
+    }
+}
+
 /// Writes the bytes to file; creates a new file if it doesn't exist;
 /// truncates (i.e overwrites) the file if it already exists.
 pub fn write_file(path: &Path, bytes: &[u8]) -> Result<()> {
@@ -67,40 +75,40 @@ impl ScriptOptions {
             link: None,
         }
     }
-}
 
-/// Creates a new executable script at path given the options.
-pub fn create_script(path: &Path, lines: Vec<String>, opt: &ScriptOptions) -> Result<()> {
-    let file = fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .open(path)?;
+    /// Creates a new executable script at path given the options.
+    pub fn create(&self, path: &Path, lines: Vec<String>) -> Result<()> {
+        let file = fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(path)?;
 
-    let metadata = file.metadata()?;
+        let metadata = file.metadata()?;
 
-    let mut script: Vec<String> = Vec::new();
+        let mut script: Vec<String> = Vec::new();
 
-    if opt.shebang {
-        script.push(format!("#!/usr/bin/env {}", opt.prog));
+        if self.shebang {
+            script.push(format!("#!/usr/bin/env {}", self.prog));
+        }
+
+        script.extend(lines);
+        let script = script.join("\n");
+
+        let mut writer = LineWriter::new(file);
+        writer.write_all(script.as_bytes())?;
+
+        if self.make_exec {
+            make_exec(path, &metadata)?;
+        }
+
+        if let Some(link) = &self.link {
+            let _ = fs::remove_file(link);
+            symlink(link, path)?;
+        }
+
+        Ok(())
     }
-
-    script.extend(lines);
-    let script = script.join("\n");
-
-    let mut writer = LineWriter::new(file);
-    writer.write_all(script.as_bytes())?;
-
-    if opt.make_exec {
-        make_exec(path, &metadata)?;
-    }
-
-    if let Some(link) = &opt.link {
-        let _ = fs::remove_file(link);
-        symlink(link, path)?;
-    }
-
-    Ok(())
 }
 
 #[cfg(unix)]
@@ -161,6 +169,8 @@ fn make_exec(path: &Path, metadata: &fs::Metadata) -> Result<()> {
     Ok(())
 }
 
+/// Returns a command that has stderr and stdout
+/// bound to the Stdio::null() writer.
 pub fn new_cmd<S>(cmd: S) -> process::Command
 where
     S: AsRef<OsStr>,
@@ -169,4 +179,24 @@ where
     cmd.stderr(Stdio::null());
     cmd.stdout(Stdio::null());
     cmd
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_require_command() {
+        let ok = require_command("cargo");
+        assert!(ok.is_ok());
+        let err = require_command("non_existing_executable_error");
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn test_write_file() -> Result<()> {
+        let dir = tempfile::tempdir_in(".")?;
+        let filepath = dir.path().join("file.txt");
+        write_file(&filepath, b"Testing.")
+    }
 }

@@ -1,4 +1,5 @@
 use super::{Dirs, Installer, PkgInfo, Release};
+use crate::util;
 use anyhow::Result;
 use std::ffi::OsStr;
 use std::process::{self, Stdio};
@@ -10,8 +11,12 @@ unsafe impl Send for Go {}
 unsafe impl Sync for Go {}
 
 impl Installer for Go {
-    fn install(&self, info: &PkgInfo, release: &Release, dirs: &Dirs) -> Result<()> {
-        let version = release.try_get_version()?;
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+        util::require_command("go")?;
+        let version = match release {
+            Some(release) => release.try_get_version()?.to_string(),
+            None => "latest".to_string(),
+        };
 
         let mut cmd = new_cmd("go");
         cmd.env("GOBIN", &dirs.bin_dir);

@@ -1,5 +1,5 @@
 use super::{Dirs, Installer, PkgInfo, Release};
-use crate::util::symlink;
+use crate::util;
 use anyhow::Result;
 use std::ffi::OsStr;
 use std::fs;
@@ -19,9 +19,15 @@ unsafe impl Send for PIP {}
 unsafe impl Sync for PIP {}
 
 impl Installer for PIP {
-    fn install(&self, info: &PkgInfo, release: &Release, dirs: &Dirs) -> Result<()> {
-        let version = release.try_get_version()?;
-        let name = format!("{}=={}", info.mod_name, version);
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+        util::require_command("pip")?;
+        let name = match release {
+            Some(r) => {
+                let version = r.try_get_version()?;
+                format!("{}=={}", info.mod_name, version)
+            }
+            None => info.mod_name.to_string(),
+        };
 
         let target_dir = dirs.pkg_dir.join(&info.mod_name);
         if !target_dir.exists() {
@@ -48,7 +54,7 @@ impl Installer for PIP {
         // Create symbolic link
         let link = dirs.bin_dir.join(&info.bin_name);
         let original = venv_dir.join("bin").join(&info.bin_name);
-        symlink(&original, &link)?;
+        util::symlink(&original, &link)?;
 
         Ok(())
     }

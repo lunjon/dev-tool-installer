@@ -1,7 +1,7 @@
 # Dev Tool Installer
 `dti` is a command-line app that installs editor/code tools, such as language servers, linters and formatters.
 
-All packages are installed in your home directory at `~/.devtoolinstaller/`, no need to clutter the system.
+All packages are installed in your home directory at `~/.devtoolinstaller/` by default (see section below on how to change), no need to clutter the system.
 
 The binaries are put into `~/.devtoolinstaller/bin/`, so make sure you add that too your `PATH` environment variable.
 
@@ -32,19 +32,19 @@ $ dti list --all # or shorter: dti ls -a
 
 `dti` will try to resolve the latest release (on GitHub) and install that version.
 
-## Configuration
-An optional configuration file can be used to configure some stuff: `~/.devtoolinstaller/config.toml`.
+### Packages
+Packages are installed from one of the following *sources*:
+- `pip`: Python packages, e.g pylsp
+- `npm`: Node modules, e.g typescript-language-server
+- `go`: Go modules, e.g gopls
+- GitHub release artifacts: binaries or zip/tar archives
 
-The following block is an example of a configuration file.
+As such, the first three sources require that the corresponding command is installed.
+
+## Configuration
+An optional configuration file can be used to configure `dti`: `~/.devtoolinstaller/config.toml`.
 
 ```toml
-# Optional. Allows you to specify a GitHub OAuth app
-# that can be used in authentication. This is useful
-# if you reach the API rate limit.
-[auth]
-client-id = "string"
-client-secret = "string"
-
 # Optional. Additional configuration for packages.
 [packages]
 # Ensure that this list of packages is installed.
@@ -53,6 +53,13 @@ ensure-installed = [
   "gopls",
   "lazygit",
 ]
+
+# Optional. Allows you to specify a GitHub OAuth app
+# that can be used in authentication. This is useful
+# if you reach the API rate limit.
+[auth]
+client-id = "string"
+client-secret = "string"
 ```
 
 ### Root
@@ -63,4 +70,3 @@ If this isn't specified it defaults to `~/.devtoolinstaller`.
 ## Todo
 - Additional configuration for packages in configuration:
   - Lock version: set a fix version for a package
-- Support packages that do not have releases (e.g. bash-language-server)

@@ -1,5 +1,5 @@
 use super::{CallbackOperation, Dirs, Installer, PackageCallback, PkgInfo, Release};
-use crate::util::{new_cmd, symlink};
+use crate::util;
 use anyhow::Result;
 use std::fs;
 
@@ -23,8 +23,16 @@ unsafe impl Send for NPM {}
 unsafe impl Sync for NPM {}
 
 impl Installer for NPM {
-    fn install(&self, info: &PkgInfo, release: &Release, dirs: &Dirs) -> Result<()> {
-        let version = release.try_get_version()?;
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+        util::require_command("npm")?;
+
+        let name = match release {
+            Some(r) => {
+                let version = r.try_get_version()?;
+                format!("{}@{}", info.mod_name, version)
+            }
+            None => info.mod_name.to_string(),
+        };
 
         let target_dir = dirs.pkg_dir.join(&info.mod_name);
         let node_modules = target_dir.join("node_modules");
@@ -32,8 +40,7 @@ impl Installer for NPM {
             fs::create_dir_all(&target_dir)?;
         }
 
-        let name = format!("{}@{}", info.mod_name, version);
-        let mut cmd = new_cmd("npm");
+        let mut cmd = util::new_cmd("npm");
         cmd.arg("install");
         cmd.arg("--global");
         cmd.arg("--prefix");
@@ -46,7 +53,7 @@ impl Installer for NPM {
             // Create symbolic link
             let link = dirs.bin_dir.join(&info.bin_name);
             let original = target_dir.join("bin").join(&info.bin_name);
-            symlink(&original, &link)?;
+            util::symlink(&original, &link)?;
         }
 
         self.callback.as_ref()(CallbackOperation::Install, info, dirs)?;

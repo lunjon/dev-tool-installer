@@ -78,11 +78,11 @@ impl Handler {
     }
 
     fn handle_check(&self, cx: &Context, _args: CheckArgs) -> Result<()> {
-        let mut results: Vec<String> = Vec::new();
+        let mut results: Vec<(bool, String)> = Vec::new();
 
         // Check for versions i parallel using a thread scope.
         thread::scope(|s| {
-            let mut handles: Vec<thread::ScopedJoinHandle<String>> = Vec::new();
+            let mut handles: Vec<thread::ScopedJoinHandle<(bool, String)>> = Vec::new();
 
             for entry in &cx.manifest.packages {
                 let pkg = match cx.packages.get(&entry.name) {
@@ -94,23 +94,36 @@ impl Handler {
                     Ok(release) => match release {
                         Some(release) => {
                             let version = entry.version.to_string();
-                            let icon = if release.tag != version {
-                                "".yellow()
-                            } else {
-                                "".green()
-                            };
+                            if release.tag != version {
+                                let icon = "".yellow();
+                                let output = format!(
+                                    "{} {}: {}  {}",
+                                    icon,
+                                    entry.name.as_str().bold(),
+                                    version,
+                                    release.tag,
+                                );
 
-                            format!(
-                                "{} {}:\n  Installed: {}\n  Latest:    {}",
-                                icon,
-                                entry.name.as_str().bold(),
-                                entry.version,
-                                release.tag,
+                                (false, output)
+                            } else {
+                                let icon = "".green();
+                                let output =
+                                    format!("{} {}: {}", icon, entry.name.as_str().bold(), version);
+                                (true, output)
+                            }
+                        }
+                        None => {
+                            let icon = "?".yellow();
+                            (
+                                false,
+                                format!("{} {}: unable resolve version", icon, pkg.name()),
                             )
                         }
-                        None => format!("failed to resolve release for {}", pkg.name()),
                     },
-                    Err(err) => format!("error when resolving release for {}: {}", pkg.name(), err),
+                    Err(err) => (
+                        false,
+                        format!("error when resolving release for {}: {}", pkg.name(), err),
+                    ),
                 });
 
                 handles.push(h);
@@ -123,7 +136,8 @@ impl Handler {
             }
         });
 
-        for res in results {
+        results.sort_by_key(|res| res.0);
+        for (_, res) in results {
             println!("{}", res);
         }
 
@@ -136,7 +150,7 @@ impl Handler {
             .keys()
             .map(|k| match cx.manifest.get(k) {
                 Some(pkg) => {
-                    let s = format!("{} version {}", pkg.name.to_string().bold(), pkg.version);
+                    let s = format!("{}: {}", pkg.name.to_string().bold(), pkg.version);
                     (true, s)
                 }
                 None => {
@@ -148,8 +162,7 @@ impl Handler {
             .collect();
 
         // Sort so uninstalled are first in the list.
-        pkgs.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
-
+        pkgs.sort_by_key(|pkg| pkg.0);
         for (_, s) in pkgs {
             println!("{}", s);
         }
@@ -176,7 +189,13 @@ impl Handler {
                 let version = self.install_pkg(&mut cx.manifest, pkg, version)?;
 
                 println!("Done!");
-                println!("Installed version {}", &version);
+
+                match version {
+                    Version::Unknown(_) => {
+                        println!("Unable to resolve version so the latest version was installed.")
+                    }
+                    v => println!("Installed version {}", v),
+                }
             } else {
                 eprintln!(
                     "{} already installed. Use 'update' to update.",

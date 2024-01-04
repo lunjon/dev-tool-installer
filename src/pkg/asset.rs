@@ -6,18 +6,17 @@ use std::fs;
 
 /// Used by packages installing from a github release assset.
 pub struct GithubRelease {
-    regex: Regex,
+    pattern: String,
     assets: Box<dyn Assets>,
     callback: Box<AssetCallback>,
 }
 
 impl GithubRelease {
     pub fn new(pattern: &str, assets: Box<dyn Assets>, callback: Box<AssetCallback>) -> Self {
-        let regex = Regex::new(pattern).unwrap();
         Self {
             assets,
             callback,
-            regex,
+            pattern: pattern.to_string(),
         }
     }
 }
@@ -26,17 +25,25 @@ unsafe impl Send for GithubRelease {}
 unsafe impl Sync for GithubRelease {}
 
 impl Installer for GithubRelease {
-    fn install(&self, info: &PkgInfo, release: &Release, dirs: &Dirs) -> Result<()> {
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+        if release.is_none() {
+            bail!(
+                "package {} requires a release to fetch assets from",
+                info.name
+            );
+        }
+
         let target_dir = dirs.pkg_dir.join(&info.mod_name);
         if !target_dir.exists() {
             fs::create_dir_all(&target_dir)?;
         }
 
-        // TODO: support other targets (use cfg?)
+        let regex = Regex::new(&self.pattern)?;
+        let release = release.unwrap();
         let asset = release
             .assets
             .iter()
-            .find(|asset| self.regex.is_match(&asset.name));
+            .find(|asset| regex.is_match(&asset.name));
 
         let asset = match asset {
             Some(asset) => asset,

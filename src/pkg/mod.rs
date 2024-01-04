@@ -118,7 +118,7 @@ pub type AssetCallback = dyn Fn(&PkgInfo, &Dirs, &Path) -> Result<()>;
 
 pub trait Installer: Send + Sync {
     /// Install the package.
-    fn install(&self, info: &PkgInfo, release: &Release, dirs: &Dirs) -> Result<()>;
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()>;
 
     /// Uninstalls the package.
     fn uninstall(&self, info: &PkgInfo, dirs: &Dirs) -> Result<()> {
@@ -188,23 +188,22 @@ impl Package {
         Ok(())
     }
 
-    fn try_get_release(&self, version: Option<Version>) -> Result<Release> {
-        let release = match &version {
+    fn try_get_release(&self, version: Option<Version>) -> Result<Option<Release>> {
+        match &version {
             Some(v) => {
                 let version = v.to_string();
-                self.releases.get_from_tag(&version)?
+                self.releases.get_from_tag(&version)
             }
-            None => self.releases.latest()?,
-        };
-
-        match release {
-            Some(release) => Ok(release),
-            None => bail!("failed to resolve latest released version"),
+            None => self.releases.latest(),
         }
     }
 
-    fn install_release(&self, release: Release, dirs: &Dirs) -> Result<Version> {
-        self.installer.install(&self.info, &release, dirs)?;
-        release.try_get_version()
+    fn install_release(&self, release: Option<Release>, dirs: &Dirs) -> Result<Version> {
+        self.installer.install(&self.info, dirs, release.as_ref())?;
+
+        match release {
+            Some(r) => r.try_get_version(),
+            None => Ok(Version::Unknown("unknown".to_string())),
+        }
     }
 }

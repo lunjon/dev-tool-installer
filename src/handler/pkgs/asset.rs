@@ -109,7 +109,7 @@ fn luals_callback(_info: &PkgInfo, dirs: &Dirs, path: &Path) -> Result<()> {
 
     let opt = util::ScriptOptions::new();
     let bin = dirs.bin_dir.join(LUALS);
-    util::create_script(&bin, lines, &opt)?;
+    opt.create(&bin, lines)?;
 
     Ok(())
 }
