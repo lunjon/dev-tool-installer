@@ -4,7 +4,10 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use regex::Regex;
-use reqwest::{blocking::Client, StatusCode};
+use reqwest::{
+    blocking::{Client, Request},
+    StatusCode,
+};
 use serde::Deserialize;
 
 pub struct GitHubClient {
@@ -37,30 +40,28 @@ impl GitHubClient {
     }
 
     fn get_release(&self, url: String) -> Result<Option<Release>> {
-        let req = self
-            .client
-            .get(url)
-            .header("User-Agent", "code-tools-cli")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("Accept", "application/json");
+        let req = self.build_request(&url, "application/json")?;
+        let res = self.client.execute(req)?;
 
-        let req = match &self.auth {
-            Some((client_id, client_secret)) => req.basic_auth(client_id, Some(client_secret)),
-            None => req,
-        };
-
-        let res = self.client.execute(req.build()?)?;
         let release = match res.status() {
             StatusCode::OK => {
+                log::debug!("200 OK for GET {}", url);
+
                 let body = res.text()?;
+                log::debug!("Response body: {}", body);
+
                 let body: GHRelease = serde_json::from_str(&body)?;
                 body
             }
             StatusCode::NOT_FOUND => return Ok(None),
-            s => bail!("unexpected status code: {}", s),
+            s => {
+                log::warn!("Unexpected status code for GET {}: {}", url, s);
+                bail!("unexpected status code: {}", s)
+            }
         };
 
         let tag_name = self.try_get_tag(&release.tag_name)?;
+        log::debug!("Found tag in release: {}", tag_name);
 
         Ok(Some(Release {
             name: release.name,
@@ -84,6 +85,23 @@ impl GitHubClient {
         }
 
         Ok(tag.to_string())
+    }
+
+    fn build_request(&self, url: &str, mime: &str) -> Result<Request> {
+        let req = self
+            .client
+            .get(url)
+            .header("User-Agent", "dev-tool-installer")
+            .header("X-GitHub-Api-Version", "2022-11-28")
+            .header("Accept", mime);
+
+        let req = match &self.auth {
+            Some((client_id, client_secret)) => req.basic_auth(client_id, Some(client_secret)),
+            None => req,
+        };
+
+        let req = req.build()?;
+        Ok(req)
     }
 }
 
@@ -112,18 +130,12 @@ struct GHRelease {
 
 impl Assets for GitHubClient {
     fn download(&self, asset: &Asset) -> Result<Vec<u8>> {
-        let req = self
-            .client
-            .get(asset.url.to_string())
-            .header("User-Agent", "code-tools-cli")
-            .header("X-GitHub-Api-Version", "2022-11-28")
-            .header("Accept", "application/octet-stream")
-            .build()?;
-
+        let req = self.build_request(&asset.url, "application/octet-stream")?;
         let res = self.client.execute(req)?;
 
         let status = res.status();
         if status != StatusCode::OK {
+            log::warn!("Unexpected status code: GET {}: {}", asset.url, status);
             bail!("unexpected status code: GET {}: {}", asset.url, status);
         }
 

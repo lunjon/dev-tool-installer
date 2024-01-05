@@ -26,7 +26,7 @@ pub fn build(cfg: &Config, pkg: &JsonPackage) -> Result<Package> {
     let asset_regex = get_asset_regex(&pkg.name)?;
 
     let p = Package::new(
-        pkg_args!(pkg.name, pkg.name, bin),
+        pkg_args!(pkg.repo, pkg.name, pkg.name, bin),
         Box::new(GithubRelease::new(
             &asset_regex,
             gh_client(cfg, &pkg.repo),

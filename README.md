@@ -68,6 +68,5 @@ You can specify the root directory for `dti` using the `DTI_ROOT` environment va
 If this isn't specified it defaults to `~/.devtoolinstaller`.
 
 ## Todo
-- Add verbose flag and logging
 - Additional configuration for packages in configuration:
   - Lock version: set a fix version for a package

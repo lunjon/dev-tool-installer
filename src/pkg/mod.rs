@@ -75,6 +75,8 @@ pub struct Dirs {
 }
 
 pub struct PkgInfo {
+    /// The GitHub repository.
+    pub repo: String,
     /// Name of the package.
     pub name: String,
     /// The name of the go module, e.g golang.org/x/tools/cmd/goimports.
@@ -85,22 +87,25 @@ pub struct PkgInfo {
 
 #[macro_export]
 macro_rules! pkg_args {
-    ($name:expr) => {
+    ($repo:expr, $name:expr) => {
         $crate::pkg::PkgInfo {
+            repo: $repo.to_string(),
             name: $name.to_string(),
             bin_name: $name.to_string(),
             mod_name: $name.to_string(),
         }
     };
-    ($name:expr, $mod:expr) => {
+    ($repo:expr, $name:expr, $mod:expr) => {
         $crate::pkg::PkgInfo {
+            repo: $repo.to_string(),
             name: $name.to_string(),
             bin_name: $name.to_string(),
             mod_name: $mod.to_string(),
         }
     };
-    ($name:expr, $mod:expr, $bin:expr) => {
+    ($repo:expr, $name:expr, $mod:expr, $bin:expr) => {
         $crate::pkg::PkgInfo {
+            repo: $repo.to_string(),
             name: $name.to_string(),
             bin_name: $bin.to_string(),
             mod_name: $mod.to_string(),
@@ -166,6 +171,11 @@ impl Package {
     /// Gives the name of the package.
     pub fn name(&self) -> &String {
         &self.info.name
+    }
+
+    /// Gives the repo of the package.
+    pub fn repo(&self) -> &String {
+        &self.info.repo
     }
 
     pub fn latest(&self) -> Result<Option<Release>> {

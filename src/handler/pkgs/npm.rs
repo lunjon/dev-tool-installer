@@ -12,7 +12,7 @@ pub fn build(cfg: &Config, pkg: &JsonPackage) -> Result<Package> {
         None => pkg.name.clone(),
     };
 
-    let args = pkg_args!(pkg.name, pkginfo.module, bin);
+    let args = pkg_args!(pkg.repo, pkg.name, pkginfo.module, bin);
     let gh = gh_client(cfg, &pkg.repo);
 
     let name = pkg.name.clone();

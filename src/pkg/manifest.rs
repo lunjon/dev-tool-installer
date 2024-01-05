@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use super::Version;
 
-#[derive(Deserialize, Serialize)]
 // TODO: give better name
+#[derive(Deserialize, Serialize)]
 pub struct Entry {
     pub name: String,
     pub version: Version,

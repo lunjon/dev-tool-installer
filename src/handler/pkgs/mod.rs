@@ -46,8 +46,11 @@ pub fn get_packages(cfg: &Config) -> Result<Packages> {
     let packages_string = include_str!("packages.json");
 
     let js: JsonFile = serde_json::from_str(packages_string)?;
-    for pkg in js.packages {
-        let repo = pkg.repo.trim_start_matches("https://github.com/");
+    for mut pkg in js.packages {
+        pkg.repo = pkg
+            .repo
+            .trim_start_matches("https://github.com/")
+            .to_string();
 
         match pkg.installer.as_str() {
             "go" => {
@@ -57,9 +60,9 @@ pub fn get_packages(cfg: &Config) -> Result<Packages> {
                     None => pkg.name.clone(),
                 };
 
-                let args = pkg_args!(pkg.name, pkginfo.module, bin);
+                let args = pkg_args!(&pkg.repo, pkg.name, pkginfo.module, bin);
                 let installer = Box::<Go>::default();
-                let gh = gh_client(cfg, repo);
+                let gh = gh_client(cfg, &pkg.repo);
                 let p = Package::new(args, installer, gh);
                 insert(&pkg.name, p);
             }
@@ -70,8 +73,8 @@ pub fn get_packages(cfg: &Config) -> Result<Packages> {
                     None => pkg.name.clone(),
                 };
 
-                let args = pkg_args!(pkg.name, pkginfo.module, bin);
-                let gh = gh_client(cfg, repo);
+                let args = pkg_args!(&pkg.repo, pkg.name, pkginfo.module, bin);
+                let gh = gh_client(cfg, &pkg.repo);
                 let installer = Box::new(PIP::new(pkginfo.deps));
                 let p = Package::new(args, installer, gh);
                 insert(&pkg.name, p);

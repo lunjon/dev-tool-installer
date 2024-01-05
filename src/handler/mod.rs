@@ -5,6 +5,7 @@ use crate::pkg::{Package, Version};
 use crate::util;
 use anyhow::{bail, Result};
 use crossterm::style::Stylize;
+use prettytable::{format, row, Table};
 use std::thread;
 use std::{fs, path::PathBuf};
 
@@ -145,29 +146,61 @@ impl Handler {
     }
 
     fn handle_list(&self, cx: &Context, args: ListArgs) -> Result<()> {
-        let mut pkgs: Vec<(bool, String)> = cx
+        let mut pkgs: Vec<(bool, String, Option<Version>)> = cx
             .packages
             .keys()
             .map(|k| match cx.manifest.get(k) {
-                Some(pkg) => {
-                    let s = format!("{}: {}", pkg.name.to_string().bold(), pkg.version);
-                    (true, s)
-                }
-                None => {
-                    let s = format!("{}", k.to_string().dark_grey());
-                    (false, s)
-                }
+                Some(pkg) => (true, pkg.name.to_string(), Some(pkg.version.clone())),
+                None => (false, k.to_string(), None),
             })
-            .filter(|(installed, _)| *installed || args.all)
+            .filter(|(installed, _, _)| *installed || args.all)
             .collect();
 
-        // Sort so uninstalled are first in the list.
-        pkgs.sort_by_key(|pkg| pkg.0);
-        for (_, s) in pkgs {
-            println!("{}", s);
+        // Sort so uninstalled are last in the list.
+        pkgs.sort_by_key(|pkg| !pkg.0);
+
+        if args.detailed {
+            self.detailed_list_packages(cx, pkgs);
+        } else {
+            self.simple_list_packages(pkgs)
         }
 
         Ok(())
+    }
+
+    fn simple_list_packages(&self, pkgs: Vec<(bool, String, Option<Version>)>) {
+        for (installed, name, version) in pkgs {
+            if installed {
+                let version = version.unwrap().to_string();
+                println!("{}: {}", name.to_string().bold(), version);
+            } else {
+                println!("{}", name.to_string().dark_grey());
+            }
+        }
+    }
+
+    fn detailed_list_packages(&self, cx: &Context, pkgs: Vec<(bool, String, Option<Version>)>) {
+        let mut table = Table::new();
+        table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+        table.add_row(row![
+            "Package".to_string().green().bold(),
+            "Version".to_string().green().bold(),
+            "Repository".to_string().green().bold(),
+        ]);
+
+        for (_, name, version) in pkgs {
+            let pkg = cx.packages.get(&name).unwrap();
+            let row = if let Some(version) = version {
+                row![name, version.to_string(), pkg.repo()]
+            } else {
+                row![name.dark_grey(), "", pkg.repo()]
+            };
+
+            table.add_row(row);
+        }
+
+        table.printstd();
     }
 
     fn handle_install(
@@ -233,9 +266,14 @@ impl Handler {
                 };
 
                 if !cx.manifest.installed(name) {
+                    log::info!(
+                        "Found package from ensure-installed that wasn't installed: {}",
+                        name
+                    );
+
                     print!("Installing {}... ", name);
                     let version = self.install_pkg(&mut cx.manifest, pkg, None)?;
-                    println!("done. Installed version {}", version);
+                    println!("Installed version {}", version);
                 }
             }
         }
@@ -291,10 +329,12 @@ impl Handler {
         }
 
         let manifest = if !self.manifest_path.exists() {
+            log::info!("No manifest file found - creating new");
             let manifest = Manifest::default();
             self.write_manifest(&manifest)?;
             manifest
         } else {
+            log::debug!("Loading manifest from {:?}", self.manifest_path);
             let manifest: Manifest = util::json_from_file(&self.manifest_path)?;
             manifest
         };
@@ -316,6 +356,8 @@ impl Handler {
             .truncate(true)
             .open(&self.manifest_path)?;
         serde_json::to_writer_pretty(&mut file, manifest)?;
+
+        log::info!("Successfully wrote manifest at {:?}", self.manifest_path);
         Ok(())
     }
 }

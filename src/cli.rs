@@ -6,6 +6,8 @@ use clap::{Args, Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
+    #[arg(short, long, action = clap::ArgAction::Count, global = true)]
+    pub verbose: u8,
 }
 
 #[derive(Subcommand)]
@@ -39,6 +41,9 @@ pub struct ListArgs {
     /// Lists all packages.
     #[arg(long, short)]
     pub all: bool,
+    /// Output detailed information in a table format.
+    #[arg(long, short)]
+    pub detailed: bool,
 }
 
 #[derive(Args)]
