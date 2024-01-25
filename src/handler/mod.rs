@@ -1,15 +1,14 @@
-use crate::cli::*;
 use crate::config::Config;
 use crate::pkg::{Dirs, Entry, Manifest};
 use crate::pkg::{Package, Version};
 use crate::util;
+use crate::{cli::*, pkgs};
 use anyhow::{bail, Result};
 use crossterm::style::Stylize;
 use prettytable::{format, row, Table};
 use std::thread;
 use std::{fs, path::PathBuf};
 
-mod pkgs;
 #[cfg(test)]
 mod tests;
 

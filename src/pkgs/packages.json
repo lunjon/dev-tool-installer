@@ -1,46 +1,6 @@
 {
   "packages": [
     {
-      "name": "gopls",
-      "kind": "ls",
-      "installer": "go",
-      "repo": "https://github.com/golang/tools",
-      "pkg": {
-        "module": "golang.org/x/tools/gopls",
-        "deps": []
-      }
-    },
-    {
-      "name": "goimports",
-      "kind": "linter",
-      "installer": "go",
-      "repo": "https://github.com/golang/tools",
-      "pkg": {
-        "module": "golang.org/x/tools/cmd/goimports",
-        "deps": []
-      }
-    },
-    {
-      "name": "lazygit",
-      "kind": "tool",
-      "installer": "go",
-      "repo": "https://github.com/jesseduffield/lazygit",
-      "pkg": {
-        "module": "github.com/jesseduffield/lazygit",
-        "deps": []
-      }
-    },
-    {
-      "name": "actionlint",
-      "kind": "tool",
-      "installer": "go",
-      "repo": "https://github.com/rhysd/actionlint",
-      "pkg": {
-        "module": "github.com/rhysd/actionlint/cmd/actionlint",
-        "deps": []
-      }
-    },
-    {
       "name": "pylsp",
       "kind": "ls",
       "installer": "pip",

@@ -1,12 +1,15 @@
 use crate::github::GitHubClient;
-use crate::pkg::{Go, Package, PIP};
+use crate::pkg::{Package, PIP};
 use crate::{config::Config, pkg_args};
 use anyhow::{bail, Result};
 use serde::Deserialize;
 use std::collections::HashMap;
 
 mod asset;
+mod go;
 mod npm;
+
+use go::packages as go_packages;
 
 pub type Packages = HashMap<String, Package>;
 
@@ -18,7 +21,6 @@ pub struct JsonFile {
 #[derive(Deserialize)]
 pub struct JsonPackage {
     name: String,
-    // kind: String,
     installer: String,
     repo: String,
     pkg: serde_json::Value,
@@ -39,12 +41,17 @@ struct AssetPkgInfo {
 pub fn get_packages(cfg: &Config) -> Result<Packages> {
     let mut pkgs: Packages = HashMap::new();
 
+    // New way of loading packages
+    for pkg in go_packages(cfg) {
+        pkgs.insert(pkg.name().to_string(), pkg);
+    }
+
+    // Legacy way of loading packages
     let mut insert = |name: &str, pkg: Package| {
         pkgs.insert(name.to_string(), pkg);
     };
 
     let packages_string = include_str!("packages.json");
-
     let js: JsonFile = serde_json::from_str(packages_string)?;
     for mut pkg in js.packages {
         pkg.repo = pkg
@@ -53,19 +60,6 @@ pub fn get_packages(cfg: &Config) -> Result<Packages> {
             .to_string();
 
         match pkg.installer.as_str() {
-            "go" => {
-                let pkginfo: Pkg = serde_json::from_value(pkg.pkg)?;
-                let bin = match pkginfo.bin {
-                    Some(b) => b,
-                    None => pkg.name.clone(),
-                };
-
-                let args = pkg_args!(&pkg.repo, pkg.name, pkginfo.module, bin);
-                let installer = Box::<Go>::default();
-                let gh = gh_client(cfg, &pkg.repo);
-                let p = Package::new(args, installer, gh);
-                insert(&pkg.name, p);
-            }
             "pip" => {
                 let pkginfo: Pkg = serde_json::from_value(pkg.pkg)?;
                 let bin = match pkginfo.bin {
