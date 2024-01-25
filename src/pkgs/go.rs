@@ -32,8 +32,8 @@ pub fn packages(cfg: &Config) -> Vec<Package> {
 }
 
 fn package(cfg: &Config, name: &str, repo: &str, module: &str) -> Package {
-    let args = pkg_args!(repo, name, module, name);
-    let installer = Box::<Go>::default();
-    let gh = gh_client(cfg, repo);
+    let args = pkg_args!(&repo, name, module, name);
+    let gh = gh_client(cfg, &args.repo);
+    let installer = Box::new(Go {});
     Package::new(args, installer, gh)
 }

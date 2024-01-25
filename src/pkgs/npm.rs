@@ -1,66 +1,77 @@
-use super::{gh_client, JsonPackage, Pkg};
+use super::gh_client;
 use crate::config::Config;
 use crate::pkg::{CallbackOperation, Dirs, Package, PkgInfo, NPM};
 use crate::{pkg_args, util};
-use anyhow::Result;
 use std::fs;
 
-pub fn build(cfg: &Config, pkg: &JsonPackage) -> Result<Package> {
-    let pkginfo: Pkg = serde_json::from_value(pkg.pkg.clone())?;
-    let bin = match pkginfo.bin {
-        Some(b) => b,
-        None => pkg.name.clone(),
-    };
-
-    let args = pkg_args!(pkg.repo, pkg.name, pkginfo.module, bin);
-    let gh = gh_client(cfg, &pkg.repo);
-
-    let name = pkg.name.clone();
-    let callback =
-        Box::new(
-            move |op: CallbackOperation, info: &PkgInfo, dirs: &Dirs| match name.as_str() {
-                "vscode-langservers-extracted" => {
-                    vscode_langservers_extracted_callback(op, info, dirs)
-                }
-                _ => Ok(()),
-            },
-        );
-    let symlink = pkg.name != "vscode-langservers-extracted";
-
-    let installer = Box::new(NPM::new(symlink, pkginfo.deps, callback));
-    let p = Package::new(args, installer, gh);
-    Ok(p)
+pub fn packages(cfg: &Config) -> Vec<Package> {
+    vec![
+        package(
+            cfg,
+            "typescript-language-server",
+            "https://github.com/typescript-language-server/typescript-language-server",
+            vec!["typescript".to_string()],
+        ),
+        package(
+            cfg,
+            "pyright",
+            "https://github.com/microsoft/pyright",
+            vec![],
+        ),
+        package(
+            cfg,
+            "bash-language-server",
+            "https://github.com/bash-lsp/bash-language-server",
+            vec![],
+        ),
+        vscode_langservers_extracted(cfg),
+    ]
 }
 
-fn vscode_langservers_extracted_callback(
-    op: CallbackOperation,
-    info: &PkgInfo,
-    dirs: &Dirs,
-) -> Result<()> {
-    let bins = [
-        "vscode-css-language-server",
-        "vscode-html-language-server",
-        "vscode-json-language-server",
-        "vscode-markdown-language-server",
-    ];
+fn vscode_langservers_extracted(cfg: &Config) -> Package {
+    let args = pkg_args!(
+        "https://github.com/hrsh7th/vscode-langservers-extracted",
+        "vscode-langservers-extracted"
+    );
+    let gh = gh_client(cfg, &args.repo);
 
-    match op {
-        CallbackOperation::Install => {
-            for bin_name in bins {
-                let pkg_bin = dirs.pkg_dir.join(&info.name).join("bin").join(bin_name);
-                let bin = dirs.bin_dir.join(bin_name);
-                util::symlink(&pkg_bin, &bin)?;
+    let callback = Box::new(|op: CallbackOperation, info: &PkgInfo, dirs: &Dirs| {
+        let bins = [
+            "vscode-css-language-server",
+            "vscode-html-language-server",
+            "vscode-json-language-server",
+            "vscode-markdown-language-server",
+        ];
+
+        match op {
+            CallbackOperation::Install => {
+                for bin_name in bins {
+                    let pkg_bin = dirs.pkg_dir.join(&info.name).join("bin").join(bin_name);
+                    let bin = dirs.bin_dir.join(bin_name);
+                    util::symlink(&pkg_bin, &bin)?;
+                }
             }
-        }
-        CallbackOperation::Uninstall => {
-            for bin_name in bins {
-                let bin = dirs.bin_dir.join(bin_name);
-                if bin.exists() {
-                    fs::remove_file(&bin)?;
+            CallbackOperation::Uninstall => {
+                for bin_name in bins {
+                    let bin = dirs.bin_dir.join(bin_name);
+                    if bin.exists() {
+                        fs::remove_file(&bin)?;
+                    }
                 }
             }
         }
-    }
 
-    Ok(())
+        Ok(())
+    });
+    let installer = Box::new(NPM::new(false, vec![], callback));
+    Package::new(args, installer, gh)
+}
+
+fn package(cfg: &Config, name: &str, repo: &str, deps: Vec<String>) -> Package {
+    let args = pkg_args!(repo, name);
+    let gh = gh_client(cfg, &args.repo);
+
+    let callback = Box::new(|_op: CallbackOperation, _info: &PkgInfo, _dirs: &Dirs| Ok(()));
+    let installer = Box::new(NPM::new(true, deps, callback));
+    Package::new(args, installer, gh)
 }

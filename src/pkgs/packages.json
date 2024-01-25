@@ -1,60 +1,6 @@
 {
   "packages": [
     {
-      "name": "pylsp",
-      "kind": "ls",
-      "installer": "pip",
-      "repo": "https://github.com/python-lsp/python-lsp-server",
-      "pkg": {
-        "module": "python-lsp-server",
-        "deps": [
-          "python-lsp-ruff"
-        ]
-      }
-    },
-    {
-      "name": "typescript-language-server",
-      "kind": "ls",
-      "installer": "npm",
-      "repo": "https://github.com/typescript-language-server/typescript-language-server",
-      "pkg": {
-        "module": "typescript-language-server",
-        "deps": [
-          "typescript"
-        ]
-      }
-    },
-    {
-      "name": "pyright",
-      "kind": "ls",
-      "installer": "npm",
-      "repo": "https://github.com/microsoft/pyright",
-      "pkg": {
-        "module": "pyright",
-        "deps": []
-      }
-    },
-    {
-      "name": "bash-language-server",
-      "kind": "ls",
-      "installer": "npm",
-      "repo": "https://github.com/bash-lsp/bash-language-server",
-      "pkg": {
-        "module": "bash-language-server",
-        "deps": []
-      }
-    },
-    {
-      "name": "vscode-langservers-extracted",
-      "kind": "ls",
-      "installer": "npm",
-      "repo": "https://github.com/hrsh7th/vscode-langservers-extracted",
-      "pkg": {
-        "module": "vscode-langservers-extracted",
-        "deps": []
-      }
-    },
-    {
       "name": "elixir-ls",
       "kind": "ls",
       "installer": "release-asset",
