@@ -49,7 +49,7 @@ impl Installer for PIP {
         let mut cmd = new_cmd(pip_path);
         cmd.args(["install", "--upgrade", &name]);
         cmd.args(&self.dependencies);
-        cmd.status()?;
+        util::run_cmd(&mut cmd)?;
 
         // Create symbolic link
         let link = dirs.bin_dir.join(&info.bin_name);

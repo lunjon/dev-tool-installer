@@ -171,6 +171,8 @@ fn make_exec(path: &Path, metadata: &fs::Metadata) -> Result<()> {
 
 /// Returns a command that has stderr and stdout
 /// bound to the Stdio::null() writer.
+///
+/// TODO: add option for getting output from the command.
 pub fn new_cmd<S>(cmd: S) -> process::Command
 where
     S: AsRef<OsStr>,
@@ -179,6 +181,18 @@ where
     cmd.stderr(Stdio::null());
     cmd.stdout(Stdio::null());
     cmd
+}
+
+/// Runs a command and checks the result.
+pub fn run_cmd(cmd: &mut process::Command) -> Result<()> {
+    let output = cmd.output()?;
+    if !output.status.success() {
+        let prog = cmd.get_program();
+        log::info!("Command {:?} failed with status {}", prog, output.status);
+        bail!("command {:?} failed with status {}", prog, output.status);
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

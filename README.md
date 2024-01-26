@@ -34,12 +34,13 @@ $ dti list --all # or shorter: dti ls -a
 
 ### Packages
 Packages are installed from one of the following *sources*:
+- `cargo`: Cargo packages, e.g fd
+- `go`: Go modules, e.g gopls
 - `pip`: Python packages, e.g pylsp
 - `npm`: Node modules, e.g typescript-language-server
-- `go`: Go modules, e.g gopls
 - GitHub release artifacts: binaries or zip/tar archives
 
-As such, the first three sources require that the corresponding command is installed.
+The first four sources require that the corresponding command is installed.
 
 ## Configuration
 An optional configuration file can be used to configure `dti`: `~/.devtoolinstaller/config.toml`.

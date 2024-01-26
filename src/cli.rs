@@ -54,7 +54,7 @@ pub struct InstallArgs {
     pub name: Option<String>,
     /// Install specified version.
     /// Latest version is resolved by default.
-    #[arg(long, short)]
+    #[arg(long)]
     pub version: Option<String>,
 }
 
@@ -66,6 +66,6 @@ pub struct UpdateArgs {
     pub name: String,
     /// Install specified version.
     /// Latest version is resolved by default.
-    #[arg(long, short)]
+    #[arg(long)]
     pub version: Option<String>,
 }

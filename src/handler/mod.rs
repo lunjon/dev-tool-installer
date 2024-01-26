@@ -31,7 +31,10 @@ impl Handler {
         let cfg = root.join("config.toml");
         let bin_dir = root.join("bin");
         let pkg_dir = root.join("pkg");
+        let manifest_path = root.join("manifest.json");
+
         let dirs = Dirs {
+            root_dir: root,
             bin_dir: bin_dir.clone(),
             pkg_dir: pkg_dir.clone(),
         };
@@ -41,7 +44,7 @@ impl Handler {
             bin_dir,
             pkg_dir,
             dirs,
-            manifest_path: root.join("manifest.json"),
+            manifest_path,
         }
     }
 

@@ -1,11 +1,8 @@
-check: fmt lint test
+check: fix test
 
-fmt:
+fix:
 	cargo fmt
-
-lint:
-	cargo check
-	cargo clippy --fix --allow-dirty
+	cargo clippy --fix --allow-dirty --allow-staged
 
 test:
 	cargo test

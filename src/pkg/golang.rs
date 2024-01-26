@@ -1,8 +1,6 @@
 use super::{Dirs, Installer, PkgInfo, Release};
 use crate::util;
 use anyhow::Result;
-use std::ffi::OsStr;
-use std::process::{self, Stdio};
 
 #[derive(Default)]
 pub struct Go {}
@@ -18,22 +16,13 @@ impl Installer for Go {
             None => "latest".to_string(),
         };
 
-        let mut cmd = new_cmd("go");
+        let mut cmd = util::new_cmd("go");
         cmd.env("GOBIN", &dirs.bin_dir);
         cmd.arg("install");
         cmd.arg(format!("{}@{}", info.mod_name, version));
         cmd.status()?;
 
+        util::run_cmd(&mut cmd)?;
         Ok(())
     }
-}
-
-fn new_cmd<S>(cmd: S) -> process::Command
-where
-    S: AsRef<OsStr>,
-{
-    let mut cmd = process::Command::new(cmd);
-    cmd.stderr(Stdio::null());
-    cmd.stdout(Stdio::null());
-    cmd
 }

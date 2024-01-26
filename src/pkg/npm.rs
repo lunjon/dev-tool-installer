@@ -47,7 +47,7 @@ impl Installer for NPM {
         cmd.arg(&target_dir);
         cmd.arg(name);
         cmd.args(&self.dependencies);
-        cmd.status()?;
+        util::run_cmd(&mut cmd)?;
 
         if self.symlink {
             // Create symbolic link

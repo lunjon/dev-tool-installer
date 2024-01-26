@@ -5,6 +5,7 @@ use anyhow::Result;
 use std::collections::HashMap;
 
 mod asset;
+mod cargo;
 mod go;
 mod npm;
 mod pip;
@@ -15,6 +16,9 @@ pub fn get_packages(cfg: &Config) -> Result<Packages> {
     let mut pkgs: Packages = HashMap::new();
 
     for pkg in go::packages(cfg) {
+        pkgs.insert(pkg.name().to_string(), pkg);
+    }
+    for pkg in cargo::packages(cfg) {
         pkgs.insert(pkg.name().to_string(), pkg);
     }
     for pkg in npm::packages(cfg) {

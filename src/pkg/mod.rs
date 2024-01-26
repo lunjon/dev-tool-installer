@@ -6,6 +6,7 @@ use std::{
 };
 
 mod asset;
+mod cargo;
 mod golang;
 mod manifest;
 mod npm;
@@ -13,6 +14,7 @@ mod pip;
 pub mod version;
 
 pub use asset::GithubRelease;
+pub use cargo::Cargo;
 pub use golang::Go;
 pub use manifest::{Entry, Manifest};
 pub use npm::NPM;
@@ -68,6 +70,8 @@ pub trait Releases {
 }
 
 pub struct Dirs {
+    /// Root directory.
+    pub root_dir: PathBuf,
     /// Directory to put executable files.
     pub bin_dir: PathBuf,
     /// Directory to put additional files required by the packages.
