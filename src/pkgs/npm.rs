@@ -1,4 +1,3 @@
-use super::gh_client;
 use crate::config::Config;
 use crate::pkg::{CallbackOperation, Dirs, Package, PkgInfo, NPM};
 use crate::{pkg_args, util};
@@ -28,12 +27,11 @@ pub fn packages(cfg: &Config) -> Vec<Package> {
     ]
 }
 
-fn vscode_langservers_extracted(cfg: &Config) -> Package {
+fn vscode_langservers_extracted(_cfg: &Config) -> Package {
     let args = pkg_args!(
         "https://github.com/hrsh7th/vscode-langservers-extracted",
         "vscode-langservers-extracted"
     );
-    let gh = gh_client(cfg, &args.repo);
 
     let callback = Box::new(|op: CallbackOperation, info: &PkgInfo, dirs: &Dirs| {
         let bins = [
@@ -63,15 +61,13 @@ fn vscode_langservers_extracted(cfg: &Config) -> Package {
 
         Ok(())
     });
-    let installer = Box::new(NPM::new(false, vec![], callback));
-    Package::new(args, installer, gh)
+    let installer = Box::new(NPM::new(vec![], callback));
+    Package::new(args, installer)
 }
 
-fn package(cfg: &Config, name: &str, repo: &str, deps: Vec<String>) -> Package {
+fn package(_cfg: &Config, name: &str, repo: &str, deps: Vec<String>) -> Package {
     let args = pkg_args!(repo, name);
-    let gh = gh_client(cfg, &args.repo);
-
     let callback = Box::new(|_op: CallbackOperation, _info: &PkgInfo, _dirs: &Dirs| Ok(()));
-    let installer = Box::new(NPM::new(true, deps, callback));
-    Package::new(args, installer, gh)
+    let installer = Box::new(NPM::new(deps, callback));
+    Package::new(args, installer)
 }

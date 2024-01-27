@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::github::GitHubClient;
 use crate::pkg::{Dirs, Entry, Manifest};
 use crate::pkg::{Package, Version};
 use crate::util;
@@ -24,6 +25,7 @@ struct Context {
     manifest: Manifest,
     config: Config,
     packages: pkgs::Packages,
+    gh: GitHubClient,
 }
 
 impl Handler {
@@ -93,7 +95,7 @@ impl Handler {
                     None => continue,
                 };
 
-                let h = s.spawn(|| match pkg.latest() {
+                let h = s.spawn(|| match cx.gh.latest(pkg.repo()) {
                     Ok(release) => match release {
                         Some(release) => {
                             let version = entry.version.to_string();
@@ -221,7 +223,7 @@ impl Handler {
 
             if !cx.manifest.installed(&name) {
                 println!("Installing {}...", pkg.name().as_str().green());
-                let version = self.install_pkg(&mut cx.manifest, pkg, version)?;
+                let version = self.install_pkg(&cx.gh, &mut cx.manifest, pkg, version)?;
 
                 println!("Done!");
 
@@ -244,6 +246,7 @@ impl Handler {
 
     fn install_pkg(
         &self,
+        gh: &GitHubClient,
         manifest: &mut Manifest,
         pkg: &Package,
         vrs: Option<String>,
@@ -253,7 +256,9 @@ impl Handler {
             None => None,
         };
 
-        let version = pkg.install(vrs, &self.dirs)?;
+        let release = gh.try_get_release(pkg.repo(), vrs)?;
+        let version = pkg.install(release, &self.dirs)?;
+
         let entry = Entry::new(pkg.name().to_string(), version.clone());
         manifest.upsert(entry);
         Ok(version)
@@ -274,7 +279,7 @@ impl Handler {
                     );
 
                     print!("Installing {}... ", name);
-                    let version = self.install_pkg(&mut cx.manifest, pkg, None)?;
+                    let version = self.install_pkg(&cx.gh, &mut cx.manifest, pkg, None)?;
                     println!("Installed version {}", version);
                 }
             }
@@ -317,7 +322,9 @@ impl Handler {
             None => None,
         };
 
-        let version = pkg.update(version, &self.dirs)?;
+        let release = cx.gh.try_get_release(pkg.repo(), version)?;
+
+        let version = pkg.update(release, &self.dirs)?;
         let entry = Entry::new(pkg.name().to_string(), version.clone());
         cx.manifest.upsert(entry);
 
@@ -344,7 +351,10 @@ impl Handler {
         let config = Config::load_or_default(&self.config_filepath)?;
         let packages = pkgs::get_packages(&config)?;
 
+        let gh = GitHubClient::new(&config);
+
         Ok(Context {
+            gh,
             manifest,
             config,
             packages,

@@ -5,15 +5,13 @@ use std::fs;
 
 pub struct NPM {
     dependencies: Vec<String>,
-    symlink: bool,
     callback: Box<PackageCallback>,
 }
 
 impl NPM {
-    pub fn new(symlink: bool, dependencies: Vec<String>, callback: Box<PackageCallback>) -> Self {
+    pub fn new(dependencies: Vec<String>, callback: Box<PackageCallback>) -> Self {
         Self {
             dependencies,
-            symlink,
             callback,
         }
     }
@@ -49,10 +47,10 @@ impl Installer for NPM {
         cmd.args(&self.dependencies);
         util::run_cmd(&mut cmd)?;
 
-        if self.symlink {
-            // Create symbolic link
+        // Create symbolic link if there exists a bin in pkg dir
+        let original = target_dir.join("bin").join(&info.bin_name);
+        if original.exists() {
             let link = dirs.bin_dir.join(&info.bin_name);
-            let original = target_dir.join("bin").join(&info.bin_name);
             util::symlink(&original, &link)?;
         }
 

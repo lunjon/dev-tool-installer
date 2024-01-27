@@ -1,9 +1,7 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 mod asset;
 mod cargo;
@@ -20,16 +18,6 @@ pub use manifest::{Entry, Manifest};
 pub use npm::NPM;
 pub use pip::PIP;
 pub use version::Version;
-
-#[derive(Deserialize, Serialize)]
-pub enum PackageKind {
-    #[serde(rename = "lspserver")]
-    LSPServer,
-    #[serde(rename = "linter")]
-    Linter,
-    #[serde(rename = "formatter")]
-    Formatter,
-}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Asset {
@@ -49,23 +37,6 @@ impl Release {
     pub fn try_get_version(&self) -> Result<Version> {
         let version = Version::try_from(&self.tag)?;
         Ok(version)
-    }
-}
-
-/// Trait for getting releases of a package.
-pub trait Releases {
-    /// Get the latest release, if it exists.
-    fn latest(&self) -> Result<Option<Release>>;
-
-    /// Try get a release from tag name.
-    fn get_from_tag(&self, tag: &str) -> Result<Option<Release>>;
-
-    /// Require that a latest release exists.
-    fn require_latest(&self) -> Result<Release> {
-        match self.latest()? {
-            Some(release) => Ok(release),
-            None => bail!("failed to get latest release"),
-        }
     }
 }
 
@@ -148,7 +119,6 @@ pub trait Installer: Send + Sync {
 pub enum CallbackOperation {
     Install,
     Uninstall,
-    // Update,
 }
 
 // Optional callback after a package has been installed.
@@ -156,20 +126,16 @@ pub type PackageCallback = dyn Fn(CallbackOperation, &PkgInfo, &Dirs) -> Result<
 
 pub struct Package {
     info: PkgInfo,
+    // pub source: PackageSource,
     installer: Box<dyn Installer>,
-    releases: Box<dyn Releases>,
 }
 
 unsafe impl Send for Package {}
 unsafe impl Sync for Package {}
 
 impl Package {
-    pub fn new(info: PkgInfo, installer: Box<dyn Installer>, releases: Box<dyn Releases>) -> Self {
-        Self {
-            info,
-            installer,
-            releases,
-        }
+    pub fn new(info: PkgInfo, installer: Box<dyn Installer>) -> Self {
+        Self { info, installer }
     }
 
     /// Gives the name of the package.
@@ -182,42 +148,21 @@ impl Package {
         &self.info.repo
     }
 
-    pub fn latest(&self) -> Result<Option<Release>> {
-        self.releases.latest()
-    }
-
-    pub fn install(&self, version: Option<Version>, dirs: &Dirs) -> Result<Version> {
-        let release = self.try_get_release(version)?;
-        self.install_release(release, dirs)
-    }
-
-    pub fn update(&self, version: Option<Version>, dirs: &Dirs) -> Result<Version> {
-        let release = self.try_get_release(version)?;
-        self.uninstall(dirs)?;
-        self.install_release(release, dirs)
-    }
-
-    pub fn uninstall(&self, dirs: &Dirs) -> Result<()> {
-        self.installer.uninstall(&self.info, dirs)?;
-        Ok(())
-    }
-
-    fn try_get_release(&self, version: Option<Version>) -> Result<Option<Release>> {
-        match &version {
-            Some(v) => {
-                let version = v.to_string();
-                self.releases.get_from_tag(&version)
-            }
-            None => self.releases.latest(),
-        }
-    }
-
-    fn install_release(&self, release: Option<Release>, dirs: &Dirs) -> Result<Version> {
+    pub fn install(&self, release: Option<Release>, dirs: &Dirs) -> Result<Version> {
         self.installer.install(&self.info, dirs, release.as_ref())?;
 
         match release {
             Some(r) => r.try_get_version(),
             None => Ok(Version::Unknown("unknown".to_string())),
         }
+    }
+
+    pub fn update(&self, release: Option<Release>, dirs: &Dirs) -> Result<Version> {
+        self.uninstall(dirs)?;
+        self.install(release, dirs)
+    }
+
+    pub fn uninstall(&self, dirs: &Dirs) -> Result<()> {
+        self.installer.uninstall(&self.info, dirs)
     }
 }

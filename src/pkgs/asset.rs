@@ -39,10 +39,9 @@ fn elixir_ls(cfg: &Config) -> Result<Package> {
         args,
         Box::new(GithubRelease::new(
             &asset_regex,
-            gh_client(cfg, repo),
+            gh_client(cfg),
             Box::new(callback),
         )),
-        gh_client(cfg, repo),
     ))
 }
 
@@ -63,10 +62,9 @@ fn rust_analyzer(cfg: &Config) -> Result<Package> {
         args,
         Box::new(GithubRelease::new(
             &asset_regex,
-            gh_client(cfg, repo),
+            gh_client(cfg),
             Box::new(callback),
         )),
-        gh_client(cfg, repo),
     ))
 }
 
@@ -89,10 +87,9 @@ fn clojure_lsp(cfg: &Config) -> Result<Package> {
         args,
         Box::new(GithubRelease::new(
             &asset_regex,
-            gh_client(cfg, repo),
+            gh_client(cfg),
             Box::new(callback),
         )),
-        gh_client(cfg, repo),
     ))
 }
 
@@ -126,10 +123,9 @@ fn ltex_ls(cfg: &Config) -> Result<Package> {
         args,
         Box::new(GithubRelease::new(
             &asset_regex,
-            gh_client(cfg, repo),
+            gh_client(cfg),
             Box::new(callback),
         )),
-        gh_client(cfg, repo),
     ))
 }
 
@@ -153,10 +149,9 @@ fn direnv(cfg: &Config) -> Result<Package> {
         args,
         Box::new(GithubRelease::new(
             &asset_regex,
-            gh_client(cfg, repo),
+            gh_client(cfg),
             Box::new(callback),
         )),
-        gh_client(cfg, repo),
     ))
 }
 

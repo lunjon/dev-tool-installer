@@ -34,7 +34,6 @@ pub fn get_packages(cfg: &Config) -> Result<Packages> {
     Ok(pkgs)
 }
 
-fn gh_client(cfg: &Config, repo: &str) -> Box<GitHubClient> {
-    let repo = repo.trim_start_matches("https://github.com/");
-    Box::new(GitHubClient::new(cfg, repo.to_string()))
+fn gh_client(cfg: &Config) -> Box<GitHubClient> {
+    Box::new(GitHubClient::new(cfg))
 }

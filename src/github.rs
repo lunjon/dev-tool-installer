@@ -1,17 +1,12 @@
-use crate::{
-    config::Config,
-    pkg::{Asset, Assets, Release, Releases},
-};
+use crate::config::Config;
+use crate::pkg::{Asset, Assets, Release, Version};
 use anyhow::{bail, Result};
 use regex::Regex;
-use reqwest::{
-    blocking::{Client, Request},
-    StatusCode,
-};
+use reqwest::blocking::{Client, Request};
+use reqwest::StatusCode;
 use serde::Deserialize;
 
 pub struct GitHubClient {
-    repo: String,
     base_url: String,
     client: Client,
     semver: Regex,
@@ -20,7 +15,7 @@ pub struct GitHubClient {
 }
 
 impl GitHubClient {
-    pub fn new(cfg: &Config, repo: String) -> Self {
+    pub fn new(cfg: &Config) -> Self {
         let semver = Regex::new(r"(v\d{1,2}\.\d{1,2}\.\d{1,3})").unwrap();
         let date = Regex::new(r"^20\d\d-\d\d-\d\d$").unwrap();
 
@@ -30,7 +25,6 @@ impl GitHubClient {
             .map(|auth| (auth.client_id.clone(), auth.client_secret.clone()));
 
         Self {
-            repo,
             base_url: "https://api.github.com".to_string(),
             client: Client::new(),
             semver,
@@ -103,20 +97,27 @@ impl GitHubClient {
         let req = req.build()?;
         Ok(req)
     }
-}
 
-impl Releases for GitHubClient {
-    fn latest(&self) -> Result<Option<Release>> {
-        let url = format!("{}/repos/{}/releases/latest", self.base_url, self.repo);
+    pub fn latest(&self, repo: &str) -> Result<Option<Release>> {
+        let repo = repo.trim_start_matches("https://github.com/");
+        let url = format!("{}/repos/{}/releases/latest", self.base_url, repo);
         self.get_release(url)
     }
 
-    fn get_from_tag(&self, tag: &str) -> Result<Option<Release>> {
-        let url = format!(
-            "{}/repos/{}/releases/tags/{}",
-            self.base_url, self.repo, tag
-        );
+    pub fn get_from_tag(&self, repo: &str, tag: &str) -> Result<Option<Release>> {
+        let repo = repo.trim_start_matches("https://github.com/");
+        let url = format!("{}/repos/{}/releases/tags/{}", self.base_url, repo, tag);
         self.get_release(url)
+    }
+
+    pub fn try_get_release(&self, repo: &str, version: Option<Version>) -> Result<Option<Release>> {
+        match &version {
+            Some(v) => {
+                let version = v.to_string();
+                self.get_from_tag(repo, &version)
+            }
+            None => self.latest(repo),
+        }
     }
 }
 

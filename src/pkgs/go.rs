@@ -1,4 +1,3 @@
-use super::gh_client;
 use crate::pkg::{Go, Package};
 use crate::{config::Config, pkg_args};
 
@@ -31,9 +30,8 @@ pub fn packages(cfg: &Config) -> Vec<Package> {
     ]
 }
 
-fn package(cfg: &Config, name: &str, repo: &str, module: &str) -> Package {
+fn package(_cfg: &Config, name: &str, repo: &str, module: &str) -> Package {
     let args = pkg_args!(&repo, name, module, name);
-    let gh = gh_client(cfg, &args.repo);
     let installer = Box::new(Go {});
-    Package::new(args, installer, gh)
+    Package::new(args, installer)
 }

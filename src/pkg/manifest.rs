@@ -1,6 +1,5 @@
-use serde::{Deserialize, Serialize};
-
 use super::Version;
+use serde::{Deserialize, Serialize};
 
 // TODO: give better name
 #[derive(Deserialize, Serialize)]
