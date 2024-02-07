@@ -4,6 +4,11 @@ use regex::Regex;
 use serde::{de::Visitor, Deserialize, Serialize};
 use std::fmt;
 
+lazy_static! {
+    static ref SEMVER: Regex = Regex::new(r"(v?\d{1,2}\.\d{1,2}\.\d{1,2})$").unwrap();
+    static ref DATE: Regex = Regex::new(r"^(\d{4}-\d{2}-\d{2})").unwrap();
+}
+
 /// Major, minor and patch.
 #[derive(Clone)]
 pub enum Version {
@@ -24,17 +29,15 @@ impl TryFrom<&str> for Version {
     type Error = Error;
 
     fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
-        lazy_static! {
-            static ref SEMVER: Regex = Regex::new(r"^v?\d\.\d{1,2}\.\d{1,2}").unwrap();
-            static ref DATE: Regex = Regex::new(r"^\d{4}-\d{2}-\d{2}").unwrap();
-        }
-
         let mut semver = true;
-        let m: Vec<&str> = if SEMVER.is_match(value) {
-            value.trim_start_matches('v').split('.').collect()
-        } else if DATE.is_match(value) {
+
+        let m: Vec<&str> = if let Some(captures) = SEMVER.captures(value) {
+            let c = captures.get(1).unwrap();
+            c.as_str().trim_start_matches("v").split('.').collect()
+        } else if let Some(captures) = DATE.captures(value) {
             semver = false;
-            value.split('-').collect()
+            let c = captures.get(1).unwrap();
+            c.as_str().split('-').collect()
         } else {
             return Ok(Version::Unknown(value.to_string()));
         };
@@ -94,7 +97,7 @@ impl<'de> Visitor<'de> for VersionVisitor {
     type Value = Version;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "a valid arn")
+        write!(formatter, "a version")
     }
 
     fn visit_str<E>(self, v: &str) -> std::result::Result<Self::Value, E>
@@ -107,6 +110,44 @@ impl<'de> Visitor<'de> for VersionVisitor {
                 "invalid version format: {}",
                 v
             ))),
+        }
+    }
+}
+
+#[test]
+fn test_semver() {
+    let versions = ["1.22.3", "v.1.22.3", "name v1.22.3"];
+    for v in versions {
+        match Version::try_from(v).expect("ok") {
+            Version::Sem(x, y, z) => {
+                assert_eq!(x, 1);
+                assert_eq!(y, 22);
+                assert_eq!(z, 3);
+            }
+            _ => panic!("expected type semver"),
+        }
+    }
+}
+
+#[test]
+fn test_date() {
+    match Version::try_from("2023-01-22").expect("ok") {
+        Version::Date(x, y, z) => {
+            assert_eq!(x, 2023);
+            assert_eq!(y, 1);
+            assert_eq!(z, 22);
+        }
+        _ => panic!("expected type date"),
+    }
+}
+
+#[test]
+fn test_unknown() {
+    let versions = ["", "unknown", "23/01/23"];
+    for v in versions {
+        match Version::try_from(v).expect("ok") {
+            Version::Unknown(s) => assert_eq!(v, s),
+            _ => panic!("expected type unknown"),
         }
     }
 }

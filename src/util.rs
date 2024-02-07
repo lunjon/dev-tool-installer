@@ -171,8 +171,6 @@ fn make_exec(path: &Path, metadata: &fs::Metadata) -> Result<()> {
 
 /// Returns a command that has stderr and stdout
 /// bound to the Stdio::null() writer.
-///
-/// TODO: add option for getting output from the command.
 pub fn new_cmd<S>(cmd: S) -> process::Command
 where
     S: AsRef<OsStr>,
