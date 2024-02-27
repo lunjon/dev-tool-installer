@@ -23,8 +23,8 @@ pub enum Command {
     #[command(visible_alias = "i")]
     Install(InstallArgs),
     /// Uninstall a package.
-    #[command(visible_alias = "remove", visible_alias = "rm")]
-    Uninstall { name: String },
+    #[command(visible_alias = "rm")]
+    Remove { name: String },
     /// Updates a package.
     #[command(visible_alias = "up")]
     Update(UpdateArgs),

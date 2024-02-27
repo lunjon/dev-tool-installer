@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::{fs, process};
 
+use crate::error::Error;
+
 pub fn json_from_file<T>(path: &Path) -> Result<T>
 where
     T: DeserializeOwned,
@@ -29,10 +31,10 @@ where
 }
 
 /// Ensures that a command, e.g. pip, is installed.
-pub fn require_command(cmd: &str) -> Result<()> {
+pub fn require_command(cmd: &'static str) -> Result<(), Error> {
     match which::which(cmd) {
         Ok(_) => Ok(()),
-        Err(_) => bail!("missing required command: {}", cmd),
+        Err(_) => Err(Error::MissingProg(cmd)),
     }
 }
 

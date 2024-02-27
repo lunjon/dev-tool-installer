@@ -27,7 +27,7 @@ pub fn get_packages(cfg: &Config) -> Result<Packages> {
     for pkg in pip::packages(cfg) {
         pkgs.insert(pkg.name().to_string(), pkg);
     }
-    for pkg in asset::packages(cfg)? {
+    for pkg in asset::packages(cfg) {
         pkgs.insert(pkg.name().to_string(), pkg);
     }
 

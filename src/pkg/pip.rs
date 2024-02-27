@@ -1,5 +1,5 @@
 use super::{Dirs, Installer, PkgInfo, Release};
-use crate::util;
+use crate::{error::Error, util};
 use anyhow::Result;
 use std::fs;
 
@@ -17,7 +17,7 @@ unsafe impl Send for PIP {}
 unsafe impl Sync for PIP {}
 
 impl Installer for PIP {
-    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("python")?;
 
         let name = match release {

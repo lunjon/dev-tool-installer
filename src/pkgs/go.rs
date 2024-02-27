@@ -1,5 +1,5 @@
 use crate::pkg::{Go, Package};
-use crate::{config::Config, pkg_args};
+use crate::{config::Config, pkg_info};
 
 pub fn packages(cfg: &Config) -> Vec<Package> {
     vec![
@@ -31,7 +31,7 @@ pub fn packages(cfg: &Config) -> Vec<Package> {
 }
 
 fn package(_cfg: &Config, name: &str, repo: &str, module: &str) -> Package {
-    let args = pkg_args!(&repo, name, module, name);
+    let args = pkg_info!(&repo, name, module, name);
     let installer = Box::new(Go {});
-    Package::new(args, installer)
+    Package::new(args, None, Some(installer))
 }

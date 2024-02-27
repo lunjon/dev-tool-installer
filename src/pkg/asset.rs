@@ -1,6 +1,6 @@
 use super::{AssetCallback, Assets, Dirs, Installer, PkgInfo, Release};
-use crate::util;
-use anyhow::{bail, Result};
+use crate::{error::Error, util};
+use anyhow::Result;
 use regex::Regex;
 use std::fs;
 
@@ -25,12 +25,9 @@ unsafe impl Send for GithubRelease {}
 unsafe impl Sync for GithubRelease {}
 
 impl Installer for GithubRelease {
-    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         if release.is_none() {
-            bail!(
-                "package {} requires a release to fetch assets from",
-                info.name
-            );
+            return Err(Error::MissingRelease);
         }
 
         let target_dir = dirs.pkg_dir.join(&info.mod_name);
@@ -47,13 +44,25 @@ impl Installer for GithubRelease {
 
         let asset = match asset {
             Some(asset) => asset,
-            None => bail!("failed to find release asset for {}", info.name),
+            None => {
+                return Err(Error::MissingSystemAsset);
+            }
         };
 
         let bytes = self.assets.download(asset)?;
         let targz = target_dir.join(&asset.name);
         util::write_file(&targz, &bytes)?;
 
-        self.callback.as_ref()(info, dirs, &targz)
+        log::info!("Wrote tar.gz file to {:?}", &targz);
+
+        if let Err(err) = self.callback.as_ref()(info, dirs, &targz) {
+            log::error!("callback for {} failed: {}", info.name, err);
+            Err(Error::Install {
+                package: info.name.to_owned(),
+                reason: format!("{}", err),
+            })
+        } else {
+            Ok(())
+        }
     }
 }

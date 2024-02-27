@@ -1,5 +1,5 @@
 use super::{Dirs, Installer, PkgInfo, Release, Version};
-use crate::util;
+use crate::{error::Error, util};
 use anyhow::Result;
 use std::process;
 
@@ -10,7 +10,7 @@ unsafe impl Send for Cargo {}
 unsafe impl Sync for Cargo {}
 
 impl Installer for Cargo {
-    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("cargo")?;
 
         let mut cmd = process::Command::new("cargo");

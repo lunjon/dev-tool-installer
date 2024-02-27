@@ -1,5 +1,5 @@
 use super::{CallbackOperation, Dirs, Installer, PackageCallback, PkgInfo, Release};
-use crate::util;
+use crate::{error::Error, util};
 use anyhow::Result;
 use std::fs;
 
@@ -21,7 +21,7 @@ unsafe impl Send for NPM {}
 unsafe impl Sync for NPM {}
 
 impl Installer for NPM {
-    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("npm")?;
 
         let name = match release {

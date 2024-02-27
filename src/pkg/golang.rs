@@ -1,5 +1,5 @@
 use super::{Dirs, Installer, PkgInfo, Release};
-use crate::util;
+use crate::{error::Error, util};
 use anyhow::Result;
 
 #[derive(Default)]
@@ -9,8 +9,9 @@ unsafe impl Send for Go {}
 unsafe impl Sync for Go {}
 
 impl Installer for Go {
-    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<()> {
+    fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("go")?;
+
         let version = match release {
             Some(release) => release.try_get_version()?.to_string(),
             None => "latest".to_string(),

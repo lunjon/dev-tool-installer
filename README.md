@@ -30,17 +30,23 @@ You can list available packages with
 $ dti list --all # or shorter: dti ls -a
 ```
 
-`dti` will try to resolve the latest release (on GitHub) and install that version.
+`dti` will try to resolve the latest release (on GitHub) and install that version,
+preferably from a binary that can run on your system.
 
-### Packages
-Packages are installed from one of the following *sources*:
-- `cargo`: Cargo packages, e.g fd
-- `go`: Go modules, e.g gopls
-- `pip`: Python packages, e.g pylsp
-- `npm`: Node modules, e.g typescript-language-server
-- GitHub release artifacts: binaries or zip/tar archives
+If that's not the case, it may look for an alternative way to install a package.
 
-The first four sources require that the corresponding command is installed.
+For instance, if you try to install a package that `dti` doesn't know how
+install on your platform but you have a native tool installed, it may prompt
+you to use that instead.
+
+By a _native tool_ i mean some of the following:
+- `cargo`
+- `go`
+- `pip`
+- `npm`
+
+Although pre-built binaries are preferred, these exist as fallback for some packages;
+in fact, some packages are only available through some of the listed tools.
 
 ## Configuration
 An optional configuration file can be used to configure `dti`: `~/.devtoolinstaller/config.toml`.
@@ -67,7 +73,3 @@ client-secret = "string"
 You can specify the root directory for `dti` using the `DTI_ROOT` environment variable.
 
 If this isn't specified it defaults to `~/.devtoolinstaller`.
-
-## Todo
-- Additional configuration for packages in configuration:
-  - Lock version: set a fix version for a package
