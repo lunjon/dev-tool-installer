@@ -16,7 +16,7 @@ pub fn packages(cfg: &Config) -> Vec<Package> {
         direnv(cfg),
     ];
 
-    packages.into_iter().filter_map(|opt| opt).collect()
+    packages.into_iter().flatten().collect()
 }
 
 fn elixir_ls(cfg: &Config) -> Option<Package> {

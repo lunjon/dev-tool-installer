@@ -33,7 +33,7 @@ impl TryFrom<&str> for Version {
 
         let m: Vec<&str> = if let Some(captures) = SEMVER.captures(value) {
             let c = captures.get(1).unwrap();
-            c.as_str().trim_start_matches("v").split('.').collect()
+            c.as_str().trim_start_matches('v').split('.').collect()
         } else if let Some(captures) = DATE.captures(value) {
             semver = false;
             let c = captures.get(1).unwrap();
