@@ -87,7 +87,7 @@ fn rust_analyzer(cfg: &Config) -> Option<Package> {
 }
 
 fn bat(cfg: &Config) -> Option<Package> {
-    let repo = "sharkdp/bat";
+    let repo = "https://github.com/sharkdp/bat";
     let args = pkg_info!(&repo, "bat");
 
     let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
@@ -143,7 +143,7 @@ fn bat(cfg: &Config) -> Option<Package> {
 }
 
 fn just(cfg: &Config) -> Option<Package> {
-    let repo = "casey/just";
+    let repo = "https://github.com/casey/just";
     let args = pkg_info!(&repo, "just");
 
     let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
