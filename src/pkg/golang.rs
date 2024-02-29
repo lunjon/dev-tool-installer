@@ -3,12 +3,16 @@ use crate::{error::Error, util};
 use anyhow::Result;
 
 #[derive(Default)]
-pub struct Go {}
+pub struct GoInstaller {}
 
-unsafe impl Send for Go {}
-unsafe impl Sync for Go {}
+unsafe impl Send for GoInstaller {}
+unsafe impl Sync for GoInstaller {}
 
-impl Installer for Go {
+impl Installer for GoInstaller {
+    fn name(&self) -> &str {
+        "Go"
+    }
+
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("go")?;
 

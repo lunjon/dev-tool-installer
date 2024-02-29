@@ -13,10 +13,10 @@ pub mod version;
 
 pub use asset::GithubReleaseInstaller;
 pub use cargo::CargoInstaller;
-pub use golang::Go;
+pub use golang::GoInstaller;
 pub use manifest::{Entry, Manifest};
-pub use npm::NPM;
-pub use pip::PIP;
+pub use npm::NpmInstaller;
+pub use pip::PipInstaller;
 pub use version::Version;
 
 use crate::error::Error;
@@ -106,6 +106,9 @@ pub type AssetCallback = dyn Fn(&PkgInfo, &Dirs, &Path) -> Result<()>;
 /// An installer is able to install a given package (`info`)
 /// to the correct directory.
 pub trait Installer: Send + Sync {
+    /// Returns the name of the installer.
+    fn name(&self) -> &str;
+
     /// Install the package.
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error>;
 
@@ -198,15 +201,17 @@ impl Package {
                     err => bail!("{}", err),
                 }
             } else {
-                log::info!("Succesfully installed {} for release asset", self.info.name);
+                log::info!(
+                    "Succesfully installed {} from release asset",
+                    self.info.name
+                );
                 return version;
             }
         }
 
         if let Some(installer) = &self.native_installer {
-            println!(
-                "No release asset available for your system, trying a package manager instead."
-            );
+            println!("No release asset available for your system.");
+            println!("Trying to install using {}", installer.name());
 
             if let Err(err) = installer.install(&self.info, dirs, release.as_ref()) {
                 match &err {
@@ -216,7 +221,11 @@ impl Package {
                     err => bail!("{}", err),
                 }
             } else {
-                log::info!("Succesfully installed {} for release asset", self.info.name);
+                log::info!(
+                    "Succesfully installed {} using {}",
+                    self.info.name,
+                    installer.name()
+                );
                 return version;
             }
         }

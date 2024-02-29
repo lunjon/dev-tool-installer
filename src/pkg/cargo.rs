@@ -10,6 +10,10 @@ unsafe impl Send for CargoInstaller {}
 unsafe impl Sync for CargoInstaller {}
 
 impl Installer for CargoInstaller {
+    fn name(&self) -> &str {
+        "Cargo"
+    }
+
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("cargo")?;
 

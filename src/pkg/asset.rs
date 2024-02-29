@@ -29,6 +29,10 @@ unsafe impl Send for GithubReleaseInstaller {}
 unsafe impl Sync for GithubReleaseInstaller {}
 
 impl Installer for GithubReleaseInstaller {
+    fn name(&self) -> &str {
+        "GitHub releases"
+    }
+
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         if release.is_none() {
             return Err(Error::MissingRelease);

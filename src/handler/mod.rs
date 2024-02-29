@@ -225,13 +225,9 @@ impl Handler {
                 println!("Installing {}...", pkg.name().as_str().green());
                 let version = self.install_pkg(&cx.gh, &mut cx.manifest, pkg, version)?;
 
-                println!("Done!");
-
                 match version {
-                    Version::Unknown(_) => {
-                        println!("Unable to resolve version so the latest version was installed.")
-                    }
-                    v => println!("Installed version {}", v),
+                    Version::Unknown(v) => println!("Installed unknown version {}.", v),
+                    v => println!("Installed version {}.", v),
                 }
             } else {
                 eprintln!(
@@ -301,7 +297,6 @@ impl Handler {
         println!("Uninstalling {}... ", &name);
         pkg.uninstall(&self.dirs)?;
 
-        println!("Done.");
         cx.manifest.remove(&name);
         Ok(())
     }
@@ -328,7 +323,7 @@ impl Handler {
         let entry = Entry::new(pkg.name().to_string(), version.clone());
         cx.manifest.upsert(entry);
 
-        println!("Done. Updated {} to version {}", name, version);
+        println!("Updated {} to version {}", name, version);
         Ok(())
     }
 

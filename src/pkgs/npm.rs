@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::pkg::{CallbackOperation, Dirs, Package, PkgInfo, NPM};
+use crate::pkg::{CallbackOperation, Dirs, NpmInstaller, Package, PkgInfo};
 use crate::{pkg_info, util};
 use std::fs;
 
@@ -62,13 +62,13 @@ fn vscode_langservers_extracted(_cfg: &Config) -> Package {
         Ok(())
     });
 
-    let installer = Box::new(NPM::new(vec![], callback));
+    let installer = Box::new(NpmInstaller::new(vec![], callback));
     Package::new(args, None, Some(installer))
 }
 
 fn package(_cfg: &Config, name: &str, repo: &str, deps: Vec<String>) -> Package {
     let args = pkg_info!(repo, name);
     let callback = Box::new(|_op: CallbackOperation, _info: &PkgInfo, _dirs: &Dirs| Ok(()));
-    let installer = Box::new(NPM::new(deps, callback));
+    let installer = Box::new(NpmInstaller::new(deps, callback));
     Package::new(args, None, Some(installer))
 }

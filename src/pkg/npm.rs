@@ -3,12 +3,12 @@ use crate::{error::Error, util};
 use anyhow::Result;
 use std::fs;
 
-pub struct NPM {
+pub struct NpmInstaller {
     dependencies: Vec<String>,
     callback: Box<PackageCallback>,
 }
 
-impl NPM {
+impl NpmInstaller {
     pub fn new(dependencies: Vec<String>, callback: Box<PackageCallback>) -> Self {
         Self {
             dependencies,
@@ -17,10 +17,14 @@ impl NPM {
     }
 }
 
-unsafe impl Send for NPM {}
-unsafe impl Sync for NPM {}
+unsafe impl Send for NpmInstaller {}
+unsafe impl Sync for NpmInstaller {}
 
-impl Installer for NPM {
+impl Installer for NpmInstaller {
+    fn name(&self) -> &str {
+        "npm"
+    }
+
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("npm")?;
 

@@ -3,20 +3,24 @@ use crate::{error::Error, util};
 use anyhow::Result;
 use std::fs;
 
-pub struct PIP {
+pub struct PipInstaller {
     dependencies: Vec<String>,
 }
 
-impl PIP {
+impl PipInstaller {
     pub fn new(dependencies: Vec<String>) -> Self {
         Self { dependencies }
     }
 }
 
-unsafe impl Send for PIP {}
-unsafe impl Sync for PIP {}
+unsafe impl Send for PipInstaller {}
+unsafe impl Sync for PipInstaller {}
 
-impl Installer for PIP {
+impl Installer for PipInstaller {
+    fn name(&self) -> &str {
+        "pip"
+    }
+
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("python")?;
 
