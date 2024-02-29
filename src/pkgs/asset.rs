@@ -1,6 +1,6 @@
 use super::gh_client;
 use crate::config::Config;
-use crate::pkg::{Cargo, Dirs, GithubRelease, Package, PkgInfo};
+use crate::pkg::{CargoInstaller, Dirs, GithubReleaseInstaller, Package, PkgInfo};
 use crate::{pkg_info, util};
 use anyhow::bail;
 use std::fs;
@@ -37,8 +37,8 @@ fn elixir_ls(cfg: &Config) -> Option<Package> {
 
     Some(Package::new(
         info,
-        Some(Box::new(GithubRelease::new(
-            "^elixir-ls-v.*\\.zip$",
+        Some(Box::new(GithubReleaseInstaller::new(
+            "^elixir-ls-v.*\\.zip$".to_string(),
             gh_client(cfg),
             Box::new(callback),
         ))),
@@ -76,8 +76,8 @@ fn rust_analyzer(cfg: &Config) -> Option<Package> {
     asset_regex.map(|pattern| {
         Package::new(
             args,
-            Some(Box::new(GithubRelease::new(
-                pattern,
+            Some(Box::new(GithubReleaseInstaller::new(
+                pattern.to_string(),
                 gh_client(cfg),
                 Box::new(callback),
             ))),
@@ -88,7 +88,7 @@ fn rust_analyzer(cfg: &Config) -> Option<Package> {
 
 fn bat(cfg: &Config) -> Option<Package> {
     let repo = "https://github.com/sharkdp/bat";
-    let args = pkg_info!(&repo, "bat");
+    let info = pkg_info!(&repo, "bat");
 
     let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
         let pkg_dir = dirs.pkg_dir.join(&info.name);
@@ -118,33 +118,31 @@ fn bat(cfg: &Config) -> Option<Package> {
         target_arch = "x86_64",
         target_env = "musl"
     )) {
-        Some("bat-.*-x86_64-unknown-linux-musl.tar.gz")
+        "bat-.*-x86_64-unknown-linux-musl.tar.gz"
     } else if cfg!(all(
         target_os = "linux",
         target_arch = "x86_64",
         target_env = "gnu"
     )) {
-        Some("bat-.*-x86_64-unknown-linux-gnu.tar.gz")
+        "bat-.*-x86_64-unknown-linux-gnu.tar.gz"
     } else {
-        None
+        return Some(Package::new(info, None, Some(Box::new(CargoInstaller {}))));
     };
 
-    asset_regex.map(|pattern| {
-        Package::new(
-            args,
-            Some(Box::new(GithubRelease::new(
-                pattern,
-                gh_client(cfg),
-                Box::new(callback),
-            ))),
-            Some(Box::new(Cargo {})),
-        )
-    })
+    Some(Package::new(
+        info,
+        Some(Box::new(GithubReleaseInstaller::new(
+            asset_regex.to_string(),
+            gh_client(cfg),
+            Box::new(callback),
+        ))),
+        Some(Box::new(CargoInstaller {})),
+    ))
 }
 
 fn just(cfg: &Config) -> Option<Package> {
     let repo = "https://github.com/casey/just";
-    let args = pkg_info!(&repo, "just");
+    let info = pkg_info!(&repo, "just");
 
     let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
         let pkg_dir = dirs.pkg_dir.join(&info.name);
@@ -160,22 +158,20 @@ fn just(cfg: &Config) -> Option<Package> {
     };
 
     let asset_regex = if cfg!(all(target_os = "linux", target_arch = "x86_64",)) {
-        Some("just-.*-x86_64-unknown-linux-musl.tar.gz")
+        "just-.*-x86_64-unknown-linux-musl.tar.gz"
     } else {
-        None
+        return Some(Package::new(info, None, Some(Box::new(CargoInstaller {}))));
     };
 
-    asset_regex.map(|pattern| {
-        Package::new(
-            args,
-            Some(Box::new(GithubRelease::new(
-                pattern,
-                gh_client(cfg),
-                Box::new(callback),
-            ))),
-            Some(Box::new(Cargo {})),
-        )
-    })
+    Some(Package::new(
+        info,
+        Some(Box::new(GithubReleaseInstaller::new(
+            asset_regex.to_string(),
+            gh_client(cfg),
+            Box::new(callback),
+        ))),
+        Some(Box::new(CargoInstaller {})),
+    ))
 }
 
 fn clojure_lsp(cfg: &Config) -> Option<Package> {
@@ -202,8 +198,8 @@ fn clojure_lsp(cfg: &Config) -> Option<Package> {
     asset_regex.map(|pattern| {
         Package::new(
             args,
-            Some(Box::new(GithubRelease::new(
-                pattern,
+            Some(Box::new(GithubReleaseInstaller::new(
+                pattern.to_string(),
                 gh_client(cfg),
                 Box::new(callback),
             ))),
@@ -232,14 +228,13 @@ fn direnv(cfg: &Config) -> Option<Package> {
         Some("direnv.linux-arm64")
     } else {
         None
-        // bail!("unable to determine platform for package: {}", name)
     };
 
     asset_regex.map(|pattern| {
         Package::new(
             args,
-            Some(Box::new(GithubRelease::new(
-                pattern,
+            Some(Box::new(GithubReleaseInstaller::new(
+                pattern.to_string(),
                 gh_client(cfg),
                 Box::new(callback),
             ))),

@@ -1,30 +1,34 @@
-use super::{AssetCallback, Assets, Dirs, Installer, PkgInfo, Release};
+use super::{AssetCallback, AssetFetcher, Dirs, Installer, PkgInfo, Release};
 use crate::{error::Error, util};
 use anyhow::Result;
 use regex::Regex;
 use std::fs;
 
 /// Used by packages installing from a github release assset.
-pub struct GithubRelease {
+pub struct GithubReleaseInstaller {
     pattern: String,
-    assets: Box<dyn Assets>,
+    assets: Box<dyn AssetFetcher>,
     callback: Box<AssetCallback>,
 }
 
-impl GithubRelease {
-    pub fn new(pattern: &str, assets: Box<dyn Assets>, callback: Box<AssetCallback>) -> Self {
+impl GithubReleaseInstaller {
+    pub fn new(
+        pattern: String,
+        assets: Box<dyn AssetFetcher>,
+        callback: Box<AssetCallback>,
+    ) -> Self {
         Self {
             assets,
             callback,
-            pattern: pattern.to_string(),
+            pattern,
         }
     }
 }
 
-unsafe impl Send for GithubRelease {}
-unsafe impl Sync for GithubRelease {}
+unsafe impl Send for GithubReleaseInstaller {}
+unsafe impl Sync for GithubReleaseInstaller {}
 
-impl Installer for GithubRelease {
+impl Installer for GithubReleaseInstaller {
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         if release.is_none() {
             return Err(Error::MissingRelease);

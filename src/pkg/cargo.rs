@@ -4,12 +4,12 @@ use anyhow::Result;
 use std::process;
 
 #[derive(Default)]
-pub struct Cargo {}
+pub struct CargoInstaller {}
 
-unsafe impl Send for Cargo {}
-unsafe impl Sync for Cargo {}
+unsafe impl Send for CargoInstaller {}
+unsafe impl Sync for CargoInstaller {}
 
-impl Installer for Cargo {
+impl Installer for CargoInstaller {
     fn install(&self, info: &PkgInfo, dirs: &Dirs, release: Option<&Release>) -> Result<(), Error> {
         util::require_command("cargo")?;
 

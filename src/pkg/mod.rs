@@ -11,8 +11,8 @@ mod npm;
 mod pip;
 pub mod version;
 
-pub use asset::GithubRelease;
-pub use cargo::Cargo;
+pub use asset::GithubReleaseInstaller;
+pub use cargo::CargoInstaller;
 pub use golang::Go;
 pub use manifest::{Entry, Manifest};
 pub use npm::NPM;
@@ -96,7 +96,7 @@ macro_rules! pkg_info {
 }
 
 /// Trait for downloading assets for e.g Github releases.
-pub trait Assets {
+pub trait AssetFetcher {
     fn download(&self, asset: &Asset) -> Result<Vec<u8>>;
 }
 

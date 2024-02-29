@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::pkg::{Asset, Assets, Release, Version};
+use crate::pkg::{Asset, AssetFetcher, Release, Version};
 use anyhow::{bail, Result};
 use regex::Regex;
 use reqwest::blocking::{Client, Request};
@@ -129,7 +129,7 @@ struct GHRelease {
     assets: Vec<Asset>,
 }
 
-impl Assets for GitHubClient {
+impl AssetFetcher for GitHubClient {
     fn download(&self, asset: &Asset) -> Result<Vec<u8>> {
         let req = self.build_request(&asset.url, "application/octet-stream")?;
         let res = self.client.execute(req)?;
