@@ -4,30 +4,22 @@ use crate::pkg::Package;
 use anyhow::Result;
 use std::collections::HashMap;
 
-mod asset;
-mod cargo;
-mod go;
-mod npm;
-mod pip;
+mod langservers;
+mod linters;
+mod misc;
 
 pub type Packages = HashMap<String, Package>;
 
 pub fn get_packages(cfg: &Config) -> Result<Packages> {
     let mut pkgs: Packages = HashMap::new();
 
-    for pkg in go::packages(cfg) {
+    for pkg in langservers::packages(cfg) {
         pkgs.insert(pkg.name().to_string(), pkg);
     }
-    for pkg in cargo::packages(cfg) {
+    for pkg in misc::packages(cfg) {
         pkgs.insert(pkg.name().to_string(), pkg);
     }
-    for pkg in npm::packages(cfg) {
-        pkgs.insert(pkg.name().to_string(), pkg);
-    }
-    for pkg in pip::packages(cfg) {
-        pkgs.insert(pkg.name().to_string(), pkg);
-    }
-    for pkg in asset::packages(cfg) {
+    for pkg in linters::packages(cfg) {
         pkgs.insert(pkg.name().to_string(), pkg);
     }
 

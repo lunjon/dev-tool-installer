@@ -1,65 +1,53 @@
 use super::gh_client;
 use crate::config::Config;
-use crate::pkg::{CargoInstaller, Dirs, GithubReleaseInstaller, Package, PkgInfo};
+use crate::pkg::{CargoInstaller, Dirs, GithubReleaseInstaller, GoInstaller, Package, PkgInfo};
 use crate::{pkg_info, util};
 use anyhow::bail;
 use std::fs;
 use std::path::Path;
 
-/// Returns a vec of packages installable release assets.
-/// Some packages are also installable via a package manager
-/// such a cargo.
 pub fn packages(cfg: &Config) -> Vec<Package> {
-    let packages = vec![
-        elixir_ls(cfg),
-        rust_analyzer(cfg),
+    let mut packages = vec![
+        nushell(cfg),
         bat(cfg),
+        fd(cfg),
         just(cfg),
         exa(cfg),
-        fd(cfg),
-        clojure_lsp(cfg),
-        direnv(cfg),
+        lazygit(),
+        goimports(),
     ];
 
-    packages.into_iter().flatten().collect()
+    let maybe_packages = vec![direnv(cfg)];
+    packages.extend(maybe_packages.into_iter().flatten());
+
+    packages
 }
 
-fn elixir_ls(cfg: &Config) -> Option<Package> {
-    let repo = "https://github.com/elixir-lsp/elixir-ls";
-    let info = pkg_info!(&repo, "elixir-ls");
+fn nushell(cfg: &Config) -> Package {
+    let repo = "https://github.com/nushell/nushell";
+    let info = pkg_info!(&repo, "nushell", "nu", "nu");
 
     let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
         let pkg_dir = dirs.pkg_dir.join(&info.name);
-
         util::decompress(path, &pkg_dir)?;
 
-        let executable = pkg_dir.join("language_server.sh");
-        let bin = dirs.bin_dir.join(&info.name);
-        util::symlink(&executable, &bin)?;
+        let dirname = path
+            .file_name()
+            .map(|dir| dir.to_str().unwrap().trim_end_matches(".tar.gz"));
 
-        Ok(())
-    };
+        match dirname {
+            Some(dirname) => {
+                let pkg_bin = pkg_dir.join(dirname).join(&info.bin_name);
+                let bin = dirs.bin_dir.join(&info.bin_name);
+                fs::rename(pkg_bin, &bin)?;
+                util::make_executable(&bin)?;
 
-    Some(Package::new(
-        info,
-        Some(Box::new(GithubReleaseInstaller::new(
-            "^elixir-ls-v.*\\.zip$".to_string(),
-            gh_client(cfg),
-            Box::new(callback),
-        ))),
-        None,
-    ))
-}
+                fs::remove_dir_all(pkg_dir)?;
 
-fn rust_analyzer(cfg: &Config) -> Option<Package> {
-    let repo = "https://github.com/rust-lang/rust-analyzer";
-    let args = pkg_info!(&repo, "rust-analyzer");
-
-    let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
-        let bin = dirs.bin_dir.join(&info.name);
-        util::decompress(path, &bin)?;
-        util::make_executable(&bin)?;
-        Ok(())
+                Ok(())
+            }
+            None => bail!("failed to install release artifact for {}", info.name),
+        }
     };
 
     let asset_regex = if cfg!(all(
@@ -67,31 +55,29 @@ fn rust_analyzer(cfg: &Config) -> Option<Package> {
         target_arch = "x86_64",
         target_env = "musl"
     )) {
-        Some("rust-analyzer-x86_64-unknown-linux-musl.gz")
+        "nu-.*-x86_64-linux-musl-full.tar.gz"
     } else if cfg!(all(
         target_os = "linux",
         target_arch = "x86_64",
         target_env = "gnu"
     )) {
-        Some("rust-analyzer-x86_64-unknown-linux-gnu.gz")
+        "nu-.*-x86_64-linux-gnu-full.tar.gz"
     } else {
-        None
+        return Package::new(info, None, Some(Box::new(CargoInstaller {})));
     };
 
-    asset_regex.map(|pattern| {
-        Package::new(
-            args,
-            Some(Box::new(GithubReleaseInstaller::new(
-                pattern.to_string(),
-                gh_client(cfg),
-                Box::new(callback),
-            ))),
-            None,
-        )
-    })
+    Package::new(
+        info,
+        Some(Box::new(GithubReleaseInstaller::new(
+            asset_regex.to_string(),
+            gh_client(cfg),
+            Box::new(callback),
+        ))),
+        Some(Box::new(CargoInstaller {})),
+    )
 }
 
-fn bat(cfg: &Config) -> Option<Package> {
+fn bat(cfg: &Config) -> Package {
     let repo = "https://github.com/sharkdp/bat";
     let info = pkg_info!(&repo, "bat");
 
@@ -131,10 +117,10 @@ fn bat(cfg: &Config) -> Option<Package> {
     )) {
         "bat-.*-x86_64-unknown-linux-gnu.tar.gz"
     } else {
-        return Some(Package::new(info, None, Some(Box::new(CargoInstaller {}))));
+        return Package::new(info, None, Some(Box::new(CargoInstaller {})));
     };
 
-    Some(Package::new(
+    Package::new(
         info,
         Some(Box::new(GithubReleaseInstaller::new(
             asset_regex.to_string(),
@@ -142,10 +128,10 @@ fn bat(cfg: &Config) -> Option<Package> {
             Box::new(callback),
         ))),
         Some(Box::new(CargoInstaller {})),
-    ))
+    )
 }
 
-fn just(cfg: &Config) -> Option<Package> {
+fn just(cfg: &Config) -> Package {
     let repo = "https://github.com/casey/just";
     let info = pkg_info!(&repo, "just");
 
@@ -165,10 +151,10 @@ fn just(cfg: &Config) -> Option<Package> {
     let asset_regex = if cfg!(all(target_os = "linux", target_arch = "x86_64",)) {
         "just-.*-x86_64-unknown-linux-musl.tar.gz"
     } else {
-        return Some(Package::new(info, None, Some(Box::new(CargoInstaller {}))));
+        return Package::new(info, None, Some(Box::new(CargoInstaller {})));
     };
 
-    Some(Package::new(
+    Package::new(
         info,
         Some(Box::new(GithubReleaseInstaller::new(
             asset_regex.to_string(),
@@ -176,10 +162,10 @@ fn just(cfg: &Config) -> Option<Package> {
             Box::new(callback),
         ))),
         Some(Box::new(CargoInstaller {})),
-    ))
+    )
 }
 
-fn exa(cfg: &Config) -> Option<Package> {
+fn exa(cfg: &Config) -> Package {
     let repo = "https://github.com/ogham/exa";
     let info = pkg_info!(&repo, "exa");
 
@@ -205,10 +191,10 @@ fn exa(cfg: &Config) -> Option<Package> {
     } else if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
         "exa-linux-x86_64-.*.zip"
     } else {
-        return Some(Package::new(info, None, Some(Box::new(CargoInstaller {}))));
+        return Package::new(info, None, Some(Box::new(CargoInstaller {})));
     };
 
-    Some(Package::new(
+    Package::new(
         info,
         Some(Box::new(GithubReleaseInstaller::new(
             asset_regex.to_string(),
@@ -216,10 +202,10 @@ fn exa(cfg: &Config) -> Option<Package> {
             Box::new(callback),
         ))),
         Some(Box::new(CargoInstaller {})),
-    ))
+    )
 }
 
-fn fd(cfg: &Config) -> Option<Package> {
+fn fd(cfg: &Config) -> Package {
     let repo = "https://github.com/sharkdp/fd";
     let info = pkg_info!(&repo, "fd", "fd-find");
 
@@ -259,10 +245,10 @@ fn fd(cfg: &Config) -> Option<Package> {
     )) {
         "fd-.*-x86_64-unknown-linux-gnu.tar.gz"
     } else {
-        return Some(Package::new(info, None, Some(Box::new(CargoInstaller {}))));
+        return Package::new(info, None, Some(Box::new(CargoInstaller {})));
     };
 
-    Some(Package::new(
+    Package::new(
         info,
         Some(Box::new(GithubReleaseInstaller::new(
             asset_regex.to_string(),
@@ -270,41 +256,7 @@ fn fd(cfg: &Config) -> Option<Package> {
             Box::new(callback),
         ))),
         Some(Box::new(CargoInstaller {})),
-    ))
-}
-
-fn clojure_lsp(cfg: &Config) -> Option<Package> {
-    let repo = "https://github.com/clojure-lsp/clojure-lsp";
-    let args = pkg_info!(&repo, "clojure-lsp");
-
-    let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
-        let pkg_dir = dirs.pkg_dir.join(&info.name);
-        util::decompress(path, &pkg_dir)?;
-
-        let pkg_bin = pkg_dir.join(&info.bin_name);
-        let bin = dirs.bin_dir.join(&info.bin_name);
-        util::symlink(&pkg_bin, &bin)
-    };
-
-    let asset_regex = if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
-        Some("clojure-lsp-native-linux-amd64.zip")
-    } else if cfg!(all(target_os = "linux", target_arch = "aarch64")) {
-        Some("clojure-lsp-native-linux-aarch64.zip")
-    } else {
-        None
-    };
-
-    asset_regex.map(|pattern| {
-        Package::new(
-            args,
-            Some(Box::new(GithubReleaseInstaller::new(
-                pattern.to_string(),
-                gh_client(cfg),
-                Box::new(callback),
-            ))),
-            None,
-        )
-    })
+    )
 }
 
 fn direnv(cfg: &Config) -> Option<Package> {
@@ -340,4 +292,26 @@ fn direnv(cfg: &Config) -> Option<Package> {
             None,
         )
     })
+}
+
+fn lazygit() -> Package {
+    let args = pkg_info!(
+        "https://github.com/jesseduffield/lazygit",
+        "lazygit",
+        "github.com/jesseduffield/lazygit",
+        "lazygit"
+    );
+    let installer = Box::new(GoInstaller {});
+    Package::new(args, None, Some(installer))
+}
+
+fn goimports() -> Package {
+    let args = pkg_info!(
+        "https://github.com/golang/tools",
+        "goimports",
+        "golang.org/x/tools/cmd/goimports",
+        "goimports"
+    );
+    let installer = Box::new(GoInstaller {});
+    Package::new(args, None, Some(installer))
 }
