@@ -17,7 +17,7 @@ pub fn packages(cfg: &Config) -> Vec<Package> {
         goimports(),
     ];
 
-    let maybe_packages = vec![direnv(cfg)];
+    let maybe_packages = vec![direnv(cfg), broot(cfg)];
     packages.extend(maybe_packages.into_iter().flatten());
 
     packages
@@ -264,11 +264,9 @@ fn direnv(cfg: &Config) -> Option<Package> {
     let args = pkg_info!(&repo, "direnv");
 
     let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
-        let executable = path;
-        util::make_executable(executable)?;
-
         let bin = dirs.bin_dir.join(&info.name);
-        util::symlink(executable, &bin)?;
+        fs::rename(path, &bin)?;
+        util::make_executable(&bin)?;
 
         Ok(())
     };
@@ -277,6 +275,45 @@ fn direnv(cfg: &Config) -> Option<Package> {
         Some("direnv.linux-amd64")
     } else if cfg!(all(target_os = "linux", target_arch = "arm",)) {
         Some("direnv.linux-arm64")
+    } else {
+        None
+    };
+
+    asset_regex.map(|pattern| {
+        Package::new(
+            args,
+            Some(Box::new(GithubReleaseInstaller::new(
+                pattern.to_string(),
+                gh_client(cfg),
+                Box::new(callback),
+            ))),
+            None,
+        )
+    })
+}
+
+fn broot(cfg: &Config) -> Option<Package> {
+    let repo = "https://github.com/Canop/broot";
+    let args = pkg_info!(&repo, "broot");
+
+    let callback = |info: &PkgInfo, dirs: &Dirs, path: &Path| {
+        let name = &info.name;
+        let pkg_dir = dirs.pkg_dir.join(name);
+        util::decompress(path, &pkg_dir)?;
+
+        let pkg_bin = pkg_dir.join(name);
+        let bin = dirs.bin_dir.join(name);
+        fs::rename(pkg_bin, &bin)?;
+        util::make_executable(&bin)?;
+
+        fs::remove_dir_all(&pkg_dir)?;
+        Ok(())
+    };
+
+    let asset_regex = if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+        Some("broot-x86_64-unknown-linux-musl-.*.zip")
+    } else if cfg!(all(target_os = "linux", target_arch = "arm",)) {
+        Some("broot-aarch64-unknown-linux-musl-.*.zip")
     } else {
         None
     };
